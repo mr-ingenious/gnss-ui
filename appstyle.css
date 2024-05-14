@@ -1,0 +1,85 @@
+.title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.panel_title {
+    font-size: 15px;
+    font-weight: bold;
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+.panel {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+
+    background-color: lightgray;
+
+    border-radius: 5px;
+    border: 2px solid grey;
+
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.value {
+    border: 1px solid darkgray;
+    background-color: white;
+    min-width: 50px;
+
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.button {
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.gpsd_panel {
+}
+
+.gps_values_panel {
+}
+
+.satellites_info_panel {
+    background-color: lightskyblue;
+}
+
+.sv_grid {
+    margin-top: 15px;
+    margin-bottom: 1px;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+.sv_value {
+    border: 1px solid darkgray;
+    min-width: 30px;
+}
+
+.map_panel {
+}
+
+.statusbar {
+    background-color: lightgray;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 5px;
+}
