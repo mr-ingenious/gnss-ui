@@ -20,6 +20,7 @@ class GpsdClient:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(5)
             self.socket.connect(self.server_address)
+            self.send_enable_command()
         except Exception as err:
             print(f"connecting to server failed, {err=}, {type(err)=}")
             self.socket.close()
@@ -32,6 +33,10 @@ class GpsdClient:
 
         while self.do_run:
             try:
+                if not hasattr(self, "socket"):
+                    while not self.connect():
+                        print("... retrying connection to gpsd ...")
+                        time.sleep(1)
 
                 data = self.socket.recv(50).decode("utf-8")
                 if len(data) > 0:
@@ -46,7 +51,7 @@ class GpsdClient:
                 print("socket read timeout!")
                 self.connect()
             except Exception as e:
-                print(f"Unexpected:  {e=}, {type(e)=}")
+                print(f"Unexpected: {e=}, {type(e)=}")
                 break
 
         print("Thread finishing")
@@ -58,7 +63,7 @@ class GpsdClient:
 
     def send_disable_command(self):
         print("sending disable command.")
-        cmd = '?WATCH={"enable":false,"json":true,"nmea":true}'
+        cmd = '?WATCH={"enable":false,"json":false,"nmea":false}'
         self.socket.send(cmd.encode())
 
     def start(self):
@@ -68,23 +73,22 @@ class GpsdClient:
             print("already started. NOP")
             return
 
-        while not self.connect():
-            print("retrying to connect to gpsd ...")
+        # while not self.connect():
+        #    print("retrying to connect to gpsd ...")
+        #
+        #    time.sleep(1)
 
-            time.sleep(1)
-
-        print("connected to gpsd")
+        # print("connected to gpsd")
         self.do_run = True
         self.thread = threading.Thread(
             target=self.thread_function, name="client_receive_thread"
         )
 
         self.thread.start()
-        self.send_enable_command()
 
     def stop(self):
-        print("stopping gpsd client ...")
-        if self.thread.is_alive():
+        if hasattr(self, "thread") and self.thread.is_alive():
+            print("stopping gpsd client ...")
             self.send_disable_command()
             self.do_run = False
             self.thread.join(5)

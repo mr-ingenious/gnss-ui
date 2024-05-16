@@ -42,22 +42,26 @@ class MainWindow(Gtk.ApplicationWindow):
 
         super().__init__(*args, **kwargs)
 
-        self.set_default_size(800, 600)
+        self.set_default_size(1024, 768)
         self.set_title("GNSS UI")
 
         self.add_header_menu()
 
         self.rootbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-        self.mainbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.rootbox.append(self.mainbox)
+        self.mainbox = Gtk.Box()
+        self.mainbox.set_hexpand(True)
+        self.mainbox.set_vexpand(True)
+        # Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
 
         # self.gpsd_panel = GpsdPanel(self, self.gpsd_hostname, self.gpsd_port)
         # self.mainbox.append(self.gpsd_panel)
 
         self.left_menu_panel = LeftMenuPanel(self)
+        
         self.mainbox.append(self.left_menu_panel)
-
+        self.rootbox.append(self.mainbox)
         self.position_info_panel = PositionInfoPanel()
         self.mainbox.append(self.position_info_panel)
 
@@ -67,12 +71,15 @@ class MainWindow(Gtk.ApplicationWindow):
         self.satellites_info_panel_gps = SatellitesInfoPanel("GPS", "GP")
         self.satellites_info_panel_gps.set_visible(False)
         self.mainbox.append(self.satellites_info_panel_gps)
+
         self.satellites_info_panel_glonass = SatellitesInfoPanel("Glonass", "GL")
         self.satellites_info_panel_glonass.set_visible(False)
         self.mainbox.append(self.satellites_info_panel_glonass)
+
         self.satellites_info_panel_galileo = SatellitesInfoPanel("Galileo", "GA")
         self.satellites_info_panel_galileo.set_visible(False)
         self.mainbox.append(self.satellites_info_panel_galileo)
+
         self.satellites_info_panel_beidou = SatellitesInfoPanel("Beidou", "PQ")
         self.satellites_info_panel_beidou.set_visible(False)
         self.mainbox.append(self.satellites_info_panel_beidou)
@@ -93,10 +100,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.set_child(self.rootbox)
 
-        self.main_status_text.set_label("started.")
-
         self.gpsdc = GpsdClient(self.gpsd_hostname, self.gpsd_port, self)
-        self.gpsdc.start()
+
+        self.main_status_text.set_label("started.")
 
     def add_value_item_to_grid(self, _name, _label, _grid, _row):
         _grid.insert_row(_row)
@@ -233,6 +239,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def on_connect_button(self, button):
         print("[CONNECT]")
+        self.gpsdc = GpsdClient(self.gpsd_hostname, self.gpsd_port, self)
         self.gpsdc.start()
 
     def on_disconnect_button(self, button):
@@ -276,10 +283,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # Create a new menu, containing that action
         menu = Gio.Menu.new()
-        menu.append(
-            "Do Something", "win.something"
-        )  # Or you would do app.grape if you had attached the
-        # action to the application
+        # menu.append(
+        #    "Connect to GPSD", "win.connect_to_gpsd"
+        # )
 
         # Create a popover
         self.popover = Gtk.PopoverMenu()  # Create a new popover menu
@@ -296,13 +302,22 @@ class MainWindow(Gtk.ApplicationWindow):
         # set app name
         GLib.set_application_name("My App")
 
+        action = Gio.SimpleAction.new("start-gpsd", None)
+        action.connect("activate", self.start_gpsd)
+        self.add_action(action)
+        menu.append("start gpsd", "win.start-gpsd")
+
         # Add an about dialog
         action = Gio.SimpleAction.new("about", None)
         action.connect("activate", self.show_about_dialog)
-        self.add_action(
-            action
-        )  # Here the action is being added to the window, but you could add it to the
+        self.add_action(action)
         menu.append("About", "win.about")
+
+    def start_gpsd(self, action, param):
+        print("starting GPSD ...")
+        if not hasattr(self, "gpsd"):
+            self.gpsd = GpsdClient("localhost", 2947, self)
+        self.gpsd.start()
 
     def show_about_dialog(self, action, param):
         dialog = Adw.AboutWindow(transient_for=app.get_active_window())
@@ -319,7 +334,7 @@ class MainWindow(Gtk.ApplicationWindow):
         dialog.set_copyright("© 2024 mr-ingenious")
         dialog.set_developers(["Developer"])
         dialog.set_application_icon(
-            "com.github.devname.appname"
+            "com.github.mr-ingenious.gnss-ui"
         )  # icon must be uploaded in ~/.local/share/icons or /usr/share/icons
 
         dialog.set_visible(True)
@@ -340,5 +355,5 @@ class MyApp(Adw.Application):
         self.win.handle_exit()
 
 
-app = MyApp(application_id="mr-ingenious.gps-app")
+app = MyApp(application_id="mr-ingenious.gnss-ui")
 app.run(sys.argv)
