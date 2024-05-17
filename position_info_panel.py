@@ -7,10 +7,10 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
 
-from panel import ScrolledPanel
+from panel import Panel
 
 
-class PositionInfoPanel(ScrolledPanel):
+class PositionInfoPanel(Panel):
     def __init__(self):
         super().__init__()
         self.last_rmc_update = time.time()
@@ -30,8 +30,8 @@ class PositionInfoPanel(ScrolledPanel):
 
         self.panel_label = Gtk.Label(label="Position")
         self.panel_label.set_css_classes(["panel_title"])
-        self.set_child(self.panel_label)
-        self.set_child(self.grid)
+        self.append(self.panel_label)
+        self.append(self.grid)
 
         self.__add_to_grid("rmc.latitude", "Latitude:", 1)
         self.__add_to_grid("rmc.latitude_dir", "Latitude direction:", 2)

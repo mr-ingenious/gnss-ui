@@ -13,7 +13,7 @@ from panel import Panel
 class SatellitesInfoPanel(Panel):
     def __init__(self, gnss_name, talker_id):
         super().__init__()
-        # self.box = Gtk.Box()
+
         self.gnss_name = gnss_name
         self.talker_id = talker_id
         self.sat_in_view1 = {}
@@ -72,7 +72,8 @@ class SatellitesInfoPanel(Panel):
         self.sv_grid_h4 = Gtk.Label(name="_sv_list_h4", label="SNR")
         self.sv_grid_h4.set_css_classes(["label"])
         self.sv_grid.attach(self.sv_grid_h4, 5, 1, 1, 1)
-
+        
+        
         for x in range(2, 18):
             self.__add_to_sv_grid(
                 "gsv.sat_info_" + str(x - 1), "#" + str(x - 1) + ":", (x)

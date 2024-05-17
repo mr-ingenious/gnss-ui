@@ -35,6 +35,7 @@ Gtk.StyleContext.add_provider_for_display(
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
+
         self.gpsd_hostname = "localhost"
         self.gpsd_port = 2947
         self.received_nmea_message_ct = 0
@@ -54,14 +55,18 @@ class MainWindow(Gtk.ApplicationWindow):
         self.mainbox.set_vexpand(True)
         # Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 
-
         # self.gpsd_panel = GpsdPanel(self, self.gpsd_hostname, self.gpsd_port)
         # self.mainbox.append(self.gpsd_panel)
 
+        self.scrolled_main_box = Gtk.ScrolledWindow()
+        self.scrolled_main_box.set_min_content_width(800)
+        self.scrolled_main_box.set_min_content_width(600)
+        self.scrolled_main_box.set_child(self.mainbox)
+        self.rootbox.append(self.scrolled_main_box)
+
         self.left_menu_panel = LeftMenuPanel(self)
-        
         self.mainbox.append(self.left_menu_panel)
-        self.rootbox.append(self.mainbox)
+
         self.position_info_panel = PositionInfoPanel()
         self.mainbox.append(self.position_info_panel)
 
@@ -100,9 +105,16 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.set_child(self.rootbox)
 
-        self.gpsdc = GpsdClient(self.gpsd_hostname, self.gpsd_port, self)
+        self.gpsdc = GpsdClient()
+        self.gpsdc.set_params(self.gpsd_hostname, self.gpsd_port, self)
 
         self.main_status_text.set_label("started.")
+
+        self.connect("close-request", self.handle_close_request)
+
+    def handle_close_request(self, data):
+        print("AW: close-request")
+        self.gpsdc.signalize_stop()
 
     def add_value_item_to_grid(self, _name, _label, _grid, _row):
         _grid.insert_row(_row)
@@ -202,8 +214,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.connect("destroy", lambda *args: self.map_view.try_close())
 
     def handle_exit(self):
-        # print ("stopping gpsd client");
-        self.gpsdc.stop()
+        print("stopping gpsd client")
+        self.gpsdc.signalize_stop()
+        self.gpsdc.join(5)
 
     def updateNmea(self, msg):
         # print (">> NMEA UPDATE (", msg["type"], "):", repr (msg))
@@ -227,7 +240,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.received_json_message_ct += 1
         GLib.idle_add(self.update_statusbar)
         # print(">> JSON UPDATE:", json.dumps(jobject, indent=4))
-        # self.gpsd_panel.update_info(jobject)
+        # selfGPSDC.gpsd_panel.update_info(jobject)
 
     def update_statusbar(self):
         self.main_status_text.set_label(
@@ -236,15 +249,6 @@ class MainWindow(Gtk.ApplicationWindow):
             + ", JSON="
             + str(self.received_json_message_ct)
         )
-
-    def on_connect_button(self, button):
-        print("[CONNECT]")
-        self.gpsdc = GpsdClient(self.gpsd_hostname, self.gpsd_port, self)
-        self.gpsdc.start()
-
-    def on_disconnect_button(self, button):
-        print("[DISCONNECT]")
-        self.gpsdc.stop()
 
     def on_position_button_pressed(self, button):
         self.position_info_panel.set_visible(not self.position_info_panel.get_visible())
@@ -303,7 +307,7 @@ class MainWindow(Gtk.ApplicationWindow):
         GLib.set_application_name("My App")
 
         action = Gio.SimpleAction.new("start-gpsd", None)
-        action.connect("activate", self.start_gpsd)
+        action.connect("activate", self.on_start_gpsd_button_pressed)
         self.add_action(action)
         menu.append("start gpsd", "win.start-gpsd")
 
@@ -313,11 +317,17 @@ class MainWindow(Gtk.ApplicationWindow):
         self.add_action(action)
         menu.append("About", "win.about")
 
-    def start_gpsd(self, action, param):
-        print("starting GPSD ...")
-        if not hasattr(self, "gpsd"):
-            self.gpsd = GpsdClient("localhost", 2947, self)
-        self.gpsd.start()
+    def create_and_start_gpsdc(self):
+        print("creating and starting GPSD ...")
+        if not hasattr(self, "gpsdc"):
+            self.gpsdc = GpsdClient()
+            self.gpsdc.set_params("localhost", 2947, self)
+
+        if not self.gpsdc.is_alive():
+            self.gpsdc.start()
+
+    def on_start_gpsd_button_pressed(self, action, param):
+        self.create_and_start_gpsdc()
 
     def show_about_dialog(self, action, param):
         dialog = Adw.AboutWindow(transient_for=app.get_active_window())
@@ -345,15 +355,21 @@ class MyApp(Adw.Application):
         super().__init__(**kwargs)
         self.connect("activate", self.on_activate)
         self.connect("window-removed", self.on_exit)
+        self.connect("shutdown", self.on_shutdown)
 
     def on_activate(self, app):
         self.win = MainWindow(application=app)
         self.win.present()
 
     def on_exit(self, window, data):
-        print("exiting ...")
-        self.win.handle_exit()
-
+        # print("exiting ...")
+        # self.win.handle_exit()
+        pass
+    
+    def on_shutdown(self, data):
+        # print("shutting down ...")
+        # self.win.handle_exit()
+        pass
 
 app = MyApp(application_id="mr-ingenious.gnss-ui")
 app.run(sys.argv)

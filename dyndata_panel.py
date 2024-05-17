@@ -7,10 +7,10 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
 
-from panel import ScrolledPanel
+from panel import Panel
 
 
-class DyndataPanel(ScrolledPanel):
+class DyndataPanel(Panel):
     def __init__(self):
         super().__init__()
         self.last_vtg_update = time.time()
@@ -27,8 +27,8 @@ class DyndataPanel(ScrolledPanel):
 
         self.panel_label = Gtk.Label(label="Dynamic Data")
         self.panel_label.set_css_classes(["panel_title"])
-        self.set_child(self.panel_label)
-        self.set_child(self.grid)
+        self.append(self.panel_label)
+        self.append(self.grid)
 
         self.__add_to_grid("vtg.track_true_north", "Track:", 1)
         self.__add_to_grid("vtg.track_mag", "Track mag.:", 2)
