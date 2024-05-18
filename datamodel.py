@@ -45,7 +45,7 @@ class DataModel:
         )
 
     def updateNMEA(self, msg):
-        self.logger.debug("DataModel: NMEA update, msg: %s", msg["type"])
+        # self.logger.debug("DataModel: NMEA update, msg: %s", msg["type"])
 
         if msg["type"] == "RMC":
             if msg["latitude"] != "" and msg["longitude"] != "":
@@ -91,12 +91,16 @@ class DataModel:
             # self.position["speed"]["knots"] = speed
             self.position["update_ts"] = time.time()
 
-            self.logger.debug("Datamodel - position: %s", self.position)
-            self.logger.debug("Datamodel - satellites: %s", self.satellites)
+            json_object = json.dumps(self.position, indent=4)
+            self.logger.debug("Datamodel - position: %s", json_object)
+
+            json_object = json.dumps(self.satellites, indent=4)
+            self.logger.debug("Datamodel - satellites: %s", json_object)
+
             self.logger.debug("Datamodel - time: %s", self.time)
 
         elif msg["type"] == "GSV":
-            # print("GSV: " + repr(msg))
+            # self.logger.debug("GSV: " + repr(msg))
             for i in range(1, 5):
                 try:
                     if msg["sat_" + str(i) + "_num"] != "":
@@ -127,7 +131,7 @@ class DataModel:
                     pass
 
         elif msg["type"] == "GSA":
-            # print("GSA: " + repr(msg))
+            # self.logger.debug("GSA: " + repr(msg))
 
             if msg["talker"] == "GN":
                 return
@@ -157,6 +161,7 @@ class DataModel:
             self.satellites["update_ts"] = time.time()
 
         elif msg["type"] == "GGA":
+            # self.logger.debug("GGA: " + repr(msg))
             gqr = int(msg["gps_quality"])
 
             gq = "unknown"
@@ -185,7 +190,7 @@ class DataModel:
             self.position["update_ts"] = time.time()
 
         elif msg["type"] == "VTG":
-            # print("VTG: " + repr(msg))
+            # self.logger.debug("VTG: " + repr(msg))
 
             speed_knots = 0.0
             if msg["speed_knots"] != "":
@@ -198,10 +203,10 @@ class DataModel:
             self.position["update_ts"] = time.time()
 
         elif msg["type"] == "GNS":
-            # print("GNS: " + repr(msg))
+            # self.logger.debug("GNS: " + repr(msg))
             pass
         else:
-            print("Datamodel: unsupported nmea msg type:", msg["type"])
+            self.logger.debug("Datamodel: unsupported nmea msg type: %s", msg["type"])
 
         self.last_values_update = time.time()
 
