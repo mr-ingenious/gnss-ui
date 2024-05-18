@@ -35,7 +35,7 @@ class SatellitesGraphicPanel(Panel):
         self.last_gsv_update = time.time()
 
     def draw(self, area, context, width, height, user_data):
-        print("draw: width=", width, ", height=", height)
+        # print("draw: width=", width, ", height=", height)
 
         context.set_source_rgb(0.8, 0.8, 0.8)
         context.paint()
@@ -185,14 +185,14 @@ class SatellitesGraphicPanel(Panel):
                     # print("GSA: updating sat: ", key)
                     if self.satellites.get(key) != None:
                         self.satellites.get(key).update({"used": True})
-                        print("GSA: updated satellite info:", self.satellites.get(key))
+                        # print("GSA: updated satellite info:", self.satellites.get(key))
 
         if msg["type"] == "GSV":
             # print("satellites --- got GSV:", repr(msg))
             if time.time() - self.last_gsv_update > 5:
                 for key in list(self.satellites.keys()):
                     if time.time() - self.satellites.get(key)["last_update"] > 5:
-                        print("GSV: satellites: removing ", key)
+                        # print("GSV: satellites: removing ", key)
                         self.satellites.pop(key)
 
                 self.drawing_area.queue_draw()
@@ -217,10 +217,10 @@ class SatellitesGraphicPanel(Panel):
                             "last_update": time.time(),
                         }
 
-                        print(
-                            "GSV: added new satellite info:",
-                            self.satellites.get(sat_key),
-                        )
+                        # print(
+                        #    "GSV: added new satellite info:",
+                        #    self.satellites.get(sat_key),
+                        # )
                     else:
                         self.satellites.get(sat_key).update(
                             {
