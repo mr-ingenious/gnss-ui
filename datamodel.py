@@ -3,10 +3,15 @@
 import time
 import json
 import pprint
+import logging
 
 
 class DataModel:
     def __init__(self):
+
+        logging.config.fileConfig("gnss-ui/log.ini")
+        self.logger = logging.getLogger("datamodel")
+
         self.position = dict()
         self.time = dict()
         self.satellites = dict()
@@ -40,7 +45,8 @@ class DataModel:
         )
 
     def updateNMEA(self, msg):
-        # print("DataModel: NMEA update, msg:", msg["type"])
+        self.logger.debug("DataModel: NMEA update, msg: %s", msg["type"])
+
         if msg["type"] == "RMC":
             if msg["latitude"] != "" and msg["longitude"] != "":
                 self.lat = float(msg["latitude"]) / 100
@@ -85,12 +91,9 @@ class DataModel:
             # self.position["speed"]["knots"] = speed
             self.position["update_ts"] = time.time()
 
-            print("Datamodel - position: ", end="")
-            pprint.pprint(self.position)
-            # print("Datamodel - satellites: ", end="")
-            # pprint.pprint(self.satellites)
-            # print("Datamodel - time: ", end="")
-            # pprint.pprint(self.time)
+            self.logger.debug("Datamodel - position: %s", self.position)
+            self.logger.debug("Datamodel - satellites: %s", self.satellites)
+            self.logger.debug("Datamodel - time: %s", self.time)
 
         elif msg["type"] == "GSV":
             # print("GSV: " + repr(msg))

@@ -21,6 +21,8 @@ from datamodel import DataModel
 
 import json
 
+import logging
+
 gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -37,6 +39,9 @@ Gtk.StyleContext.add_provider_for_display(
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
+
+        logging.config.fileConfig("gnss-ui/log.ini")
+        self.logger = logging.getLogger("app")
 
         self.gpsd_hostname = "localhost"
         self.gpsd_port = 2947
@@ -116,7 +121,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.connect("close-request", self.handle_close_request)
 
     def handle_close_request(self, data):
-        print("AW: close-request")
+        self.logger.debug("AW: close-request")
         self.gpsdc.signalize_stop()
 
     def add_value_item_to_grid(self, _name, _label, _grid, _row):
@@ -222,7 +227,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.gpsdc.join(5)
 
     def updateNmea(self, msg):
-        # print (">> NMEA UPDATE (", msg["type"], "):", repr (msg))
         self.received_nmea_message_ct += 1
 
         GLib.idle_add(self.update_panels, msg)
@@ -245,7 +249,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.data.updateJSON(jobject)
         self.received_json_message_ct += 1
         GLib.idle_add(self.update_statusbar)
-        # print(">> JSON UPDATE:", json.dumps(jobject, indent=4))
         # selfGPSDC.gpsd_panel.update_info(jobject)
 
     def update_statusbar(self):
@@ -324,7 +327,7 @@ class MainWindow(Gtk.ApplicationWindow):
         menu.append("About", "win.about")
 
     def create_and_start_gpsdc(self):
-        print("creating and starting GPSD ...")
+        self.logger.info("creating and starting GPSD ...")
         if not hasattr(self, "gpsdc"):
             self.gpsdc = GpsdClient()
             self.gpsdc.set_params("localhost", 2947, self)
@@ -379,8 +382,4 @@ class MyApp(Adw.Application):
 
 
 app = MyApp(application_id="mr-ingenious.gnss-ui")
-try:
-    app.run(sys.argv)
-except Exception as e:
-    print(f"Unexpected: {e=}, {type(e)=}")
-    exit(0)
+app.run(sys.argv)

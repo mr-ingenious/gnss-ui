@@ -69,13 +69,10 @@ class SatellitesGraphicPanel(Panel):
             # x, y, radius, start_angle, stop_angle
             r = min(width, height) / 2 - 10
             radius = r - (r / 4 * i) + 1
-            # print("radius: ", radius)
             context.arc(width / 2, height / 2, radius, 0, 2 * math.pi)
-            # context.fill_preserve()
             context.stroke()
 
         # draw lines
-
         max_len = 0.8 * (min(width, height) / 2 - 10)
 
         context.set_source_rgb(0.2, 0.2, 0.2)
@@ -91,7 +88,6 @@ class SatellitesGraphicPanel(Panel):
         for i in range(0, 12):
             x = width / 2 + max_len * math.cos(math.radians(30 * (i - 3)))
             y = height / 2 + max_len * math.sin(math.radians(30 * (i - 3)))
-            # print(30 * i, ": x=", x, ", y=", y)
 
             context.move_to(width / 2, height / 2)
             context.line_to(x, y)
@@ -123,17 +119,11 @@ class SatellitesGraphicPanel(Panel):
                 ("", "-used-")[value["used"]],
             )
 
-        # self.draw_element(context, width, height, 270, 30, "Sat 2")
-        # self.draw_element(context, width, height, 170, 20, "Sat 3")
-        # self.draw_element(context, width, height, 270, 90, "Sat 4")
-        # self.draw_element(context, width, height, 270, 0, "Sat 5")
-
     def draw_element(
         self, context, width, height, azimuth, elevation, title, subtitle=""
     ):
         max_len = 0.75 * (min(width, height) / 2 - 10)
 
-        # context.set_source_rgb(0.4, 0.0, 0.2)
         context.select_font_face("Sans")
         context.set_font_size(11)
 
@@ -145,17 +135,6 @@ class SatellitesGraphicPanel(Panel):
         py = height / 2 + max_len * ((90 - elevation) / 90) * math.sin(
             math.radians(azimuth - 90)
         )
-        # print(
-        #    "item: (az=",
-        #    azimuth,
-        #   ", el=",
-        #   elevation,
-        #   "): px=",
-        #   px,
-        #   ", py=",
-        #   py,
-        #   sep="",
-        # )
 
         context.move_to(px - 2, py - 2)
         context.line_to(px + 2, py + 2)
@@ -176,23 +155,18 @@ class SatellitesGraphicPanel(Panel):
     def update(self, msg):
         if msg["type"] == "GSA" and (time.time() - self.last_gsa_update >= 1):
             self.last_gsa_update = time.time()
-            # print("satellites --- got GSA:", repr(msg))
 
             for i in range(1, 13):
                 sat_id = msg["id_" + str(i)]
                 if sat_id != "":
                     key = msg["talker"] + "-" + sat_id
-                    # print("GSA: updating sat: ", key)
                     if self.satellites.get(key) != None:
                         self.satellites.get(key).update({"used": True})
-                        # print("GSA: updated satellite info:", self.satellites.get(key))
 
         if msg["type"] == "GSV":
-            # print("satellites --- got GSV:", repr(msg))
             if time.time() - self.last_gsv_update > 5:
                 for key in list(self.satellites.keys()):
                     if time.time() - self.satellites.get(key)["last_update"] > 5:
-                        # print("GSV: satellites: removing ", key)
                         self.satellites.pop(key)
 
                 self.drawing_area.queue_draw()
@@ -217,10 +191,6 @@ class SatellitesGraphicPanel(Panel):
                             "last_update": time.time(),
                         }
 
-                        # print(
-                        #    "GSV: added new satellite info:",
-                        #    self.satellites.get(sat_key),
-                        # )
                     else:
                         self.satellites.get(sat_key).update(
                             {
@@ -231,5 +201,3 @@ class SatellitesGraphicPanel(Panel):
                                 "last_update": time.time(),
                             }
                         )
-                        # print("GSV: updated satellite info:", self.satellites.get(sat_key))
-            # print("satellites:", repr(self.satellites))

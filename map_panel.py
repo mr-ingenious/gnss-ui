@@ -11,10 +11,16 @@ from gi.repository import Gtk, Adw, WebKit
 
 from panel import Panel
 
+import logging
+
 
 class MapPanel(Panel):
     def __init__(self):
         super().__init__()
+
+        logging.config.fileConfig("gnss-ui/log.ini")
+        self.logger = logging.getLogger("app")
+
         self.last_values_update = time.time()
         self.last_map_update = time.time()
         self.lat = 0.0
@@ -58,7 +64,7 @@ class MapPanel(Panel):
                 + "&mlon="
                 + str(self.lon_dec)
             )
-        print("MAP: show " + uri)
+        self.logger.debug("MAP: show %s", uri)
 
         self.webview.load_uri(uri)
 

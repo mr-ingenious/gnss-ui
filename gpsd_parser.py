@@ -3,6 +3,7 @@
 # import pynmea2
 from observer import Observer
 
+import logging, logging.config
 import json
 
 
@@ -12,6 +13,15 @@ class GpsdParser:
     def __init__(self, observer: Observer):
         self._observer = observer
         self.data = ""
+
+        logging.config.fileConfig("gnss-ui/log.ini")
+        self.logger = logging.getLogger("gpsd")
+
+        # logging.basicConfig(
+        #    level=logging.INFO,
+        #    format="[%(asctime)s %(name)s] [%(levelname)s] %(message)s",
+        #    handlers=[logging.FileHandler("app.log"), logging.StreamHandler()],
+        # )
 
     def add_data(self, new_data):
         self.data += new_data
@@ -29,28 +39,28 @@ class GpsdParser:
         # print("###################################################################")
 
         if len(self.data) > 4000:
-            print("parsing: HANDBRAKE !!!!")
-            #print("============================================================")
-            #print("============================================================")
-            #print("============================================================")
+            self.logger.warning("parsing: HANDBRAKE !!!!")
+            # print("============================================================")
+            # print("============================================================")
+            # print("============================================================")
             print("============================================================")
-            print(self.data)
+            self.logger.debug(self.data)
             print("============================================================")
-            #print("============================================================")
-            #print("============================================================")
-            #print("============================================================")
+            # print("============================================================")
+            # print("============================================================")
+            # print("============================================================")
             self.data = ""
             return
 
         # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
         # print("Buffer to parse: ")
         # print(self.data)
-        #print(
+        # print(
         #    ">>> loop start, data_len:",
         #    len(self.data),
         #    ", first chars: ",
         #    self.data[0:10],
-        #)
+        # )
         while True:
             # print(">>> in loop ...")
             self.data = (
@@ -61,13 +71,13 @@ class GpsdParser:
                 .rstrip()
             )
 
-            #print(
+            # print(
             #    ">>> loop,       data_len:",
             #    len(self.data),
             #    ", first chars: ",
             #    self.data[0:10],
-            #)
-        
+            # )
+
             nmea_start = self.data.find("$", 0)
             json_start = self.data.find("{", 0)
             nmea_cs_start = self.data.find("*", nmea_start)
@@ -77,20 +87,20 @@ class GpsdParser:
                 and (nmea_cs_start + 3) >= nmea_start
                 and nmea_start < json_start
             ):
-                # print("__parse_internal: found complete NMEA string, try to parse ...")
+                self.logger.debug("found complete NMEA string, try to parse ...")
                 # found full NMEA string --> parse and remove from input buffer
                 msg_str = self.data[nmea_start : nmea_cs_start + 3]
-                # print(
-                #    ">>> NMEA:'", msg_str + "', [", nmea_start, ", ", nmea_cs_start, "]"
-                # )
+                self.logger.debug(
+                    "NMEA:'%s', [%i, %i]", msg_str, nmea_start, nmea_cs_start
+                )
                 self.__parse_nmea_string(msg_str)
                 self.data = self.data[nmea_cs_start + 3 :]
             else:
                 if json_start >= 0:
-                    # print(">>> JSON: found {, try to parse JSON ...")
+                    self.logger.debug("JSON: found {, try to parse JSON ...")
                     self.__parse_json()
-                    
-                    if self.data.find("$", 0) >= 0 and self.data.find("*", 0) >=0:
+
+                    if self.data.find("$", 0) >= 0 and self.data.find("*", 0) >= 0:
                         # still more nmea strings found
                         continue
                     else:
@@ -101,7 +111,7 @@ class GpsdParser:
                     break
 
             # print(">>> parsing   (end): ", len(self.data))
-        #print(">>> loop done,  data_len:", len(self.data))
+        # print(">>> loop done,  data_len:", len(self.data))
 
     def __parse_internal_bak(self):
         # find first occurrence of "$" and "*" as start of checksum
@@ -157,7 +167,7 @@ class GpsdParser:
         n_start = self.data.find("{", 0)
 
         if n_start > 0:
-            # print("JSON: correcting string")
+            self.logger.debug("JSON: correcting string")
             self.data = self.data[n_start:]
 
         bct = 0
@@ -193,7 +203,7 @@ class GpsdParser:
                     # )  # , ", chars: " , self.data[0])
                     n_start = 0
                     y = json.loads(msg_str)
-                    # print("JSON: ", json.dumps(y, indent=4))
+                    self.logger.debug("JSON: %s", json.dumps(y, indent=4))
                     self._observer.updateJSON(y)
                     self.data = self.data[i + 1 :]
                     self.data = (
@@ -207,14 +217,14 @@ class GpsdParser:
                     i = 0
                     return
                 except Exception as e:
-                    print(
+                    self.logger.warning(
                         "\nJSON: exception ("
                         + str(e)
                         + "), string:\n'"
                         + msg_str
                         + "'\n"
                     )
-                    print("JSON: exception. break")
+                    self.logger.debug("JSON: exception. break")
                     break
 
             if len(self.data) == 0:
@@ -231,8 +241,8 @@ class GpsdParser:
 
     def __parse_nmea_string(self, msg_str):
         fields = msg_str.split("*")
-        # print("=== payload: ", fields[0])
-        # print("=== checksum:", fields[1])
+        self.logger.debug("=== payload: %s", fields[0])
+        self.logger.debug("=== checksum: %s", fields[1])
         payload = fields[0].split(",")
         msg = dict()
 
@@ -256,14 +266,14 @@ class GpsdParser:
         elif msg["type"] == "GNS":
             self.__parse_nmea_gns(msg, payload)
         else:
-            print("parse_nmea_string: unsupported nmea message!")
+            self.logger.debug("parse_nmea_string: unsupported nmea message!")
 
         if msg["valid"] == True:
             self._observer.updateNmea(msg)
 
     def __parse_nmea_rmc(self, msg, payload):
         if len(payload) < 12:
-            print("__parse_nmea_rmc: malformed nmea string:", payload)
+            self.logger.debug("malformed nmea string: '%s'", payload)
             return
 
         msg["time_utc"] = payload[1]
@@ -281,7 +291,7 @@ class GpsdParser:
 
     def __parse_nmea_gns(self, msg, payload):
         if len(payload) < 13:
-            print("__parse_nmea_gns: malformed nmea string:", payload)
+            self.logger.debug("malformed nmea string: '%s'", payload)
             return
 
         msg["time_utc"] = payload[1]
@@ -300,7 +310,7 @@ class GpsdParser:
 
     def __parse_nmea_gsa(self, msg, payload):
         if len(payload) < 18:
-            print("__parse_nmea_gsa: malformed nmea string:", payload)
+            self.logger.debug("malformed nmea string: '%s'", payload)
             return
 
         msg["smode"] = payload[1]
@@ -328,7 +338,7 @@ class GpsdParser:
 
     def __parse_nmea_gsv(self, msg, payload):
         if len(payload) < 8:  # TODO: check correct condition
-            print("__parse_nmea_gsv: malformed nmea string:", payload)
+            self.logger.debug("malformed nmea string: '%s'", payload)
             return
 
         msg["num_msg"] = payload[1]
@@ -356,7 +366,7 @@ class GpsdParser:
 
     def __parse_nmea_gga(self, msg, payload):
         if len(payload) < 15:
-            print("__parse_nmea_gga: malformed nmea string:", payload)
+            self.logger.debug("malformed nmea string: '%s'", payload)
             return
 
         msg["time_utc"] = payload[1]
@@ -377,7 +387,7 @@ class GpsdParser:
 
     def __parse_nmea_vtg(self, msg, payload):
         if len(payload) < 10:
-            print("__parse_nmea_: malformed nmea string:", payload)
+            self.logger.debug("malformed nmea string: '%s'", payload)
             return
 
         msg["track_deg"] = payload[1]

@@ -3,12 +3,19 @@
 import socket
 import threading
 import time
+import logging
 
 from gpsd_parser import GpsdParser
 from observer import Observer
 
 
 class GpsdClient(threading.Thread):
+    def __init__(self):
+        super().__init__()
+
+        logging.config.fileConfig("gnss-ui/log.ini")
+        self.logger = logging.getLogger("gpsd")
+
     def set_params(self, hostname, port, observer):
         self.server_address = (hostname, port)
         self.do_run = True
@@ -18,13 +25,13 @@ class GpsdClient(threading.Thread):
 
     def connect(self):
         try:
-            print("GPSDC: trying to connect to ", self.server_address)
+            self.logger.info("trying to connect to %s", self.server_address)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(5)
             self.socket.connect(self.server_address)
             self.send_enable_command()
         except Exception as err:
-            print(f"GPSDC: connecting to server failed: {err=}, {type(err)=}")
+            self.logger.error(f"connecting to server failed: %s, %s", err, type(err))
             self.socket.close()
             self.socket = None
             return False
@@ -37,17 +44,17 @@ class GpsdClient(threading.Thread):
         self.do_run = False
 
     def run(self):
-        print("GPSDC: client thread: starting")
+        self.logger.info("client thread: starting")
 
         while self.do_run:
             try:
                 if self.socket == None:
                     while not self.connect():
                         if self.do_run:
-                            print("GPSDC: ... retrying connection to gpsd ...")
+                            self.logger.info("... retrying connection to gpsd ...")
                             time.sleep(1)
                         else:
-                            print("GPSDC: stopping retrying connection to gpsd ...")
+                            self.logger.info("stopping retrying connection to gpsd ...")
                             return
 
                 data = self.socket.recv(50).decode("utf-8")
@@ -56,21 +63,21 @@ class GpsdClient(threading.Thread):
                 else:
                     self.connect()
             except ConnectionResetError as e:
-                print(f"GPSDC: Connection reset error: {e=}, {type(e)=}")
+                self.logger.error(f"connection reset error: {e=}, {type(e)=}")
             except socket.error as e:
-                print(f"GPSDC: Socket error: {e=}, {type(e)=}")
+                self.logger.error(f"socket error: {e=}, {type(e)=}")
             except Exception as e:
-                print(f"GPSDC: Unexpected: {e=}, {type(e)=}")
+                self.logger.error(f"unexpected: {e=}, {type(e)=}")
                 break
 
-        print("GPSDC: Thread finishing")
+        self.logger.info("thread finishing")
 
     def send_enable_command(self):
-        print("GPSDC: sending enable command.")
+        self.logger.info("sending enable command.")
         cmd = '?WATCH={"enable":true,"json":true,"nmea":true}'
         self.socket.send(cmd.encode())
 
     def send_disable_command(self):
-        print("GPSDC: sending disable command.")
+        self.logger.info("sending disable command.")
         cmd = '?WATCH={"enable":false,"json":false,"nmea":false}'
         self.socket.send(cmd.encode())
