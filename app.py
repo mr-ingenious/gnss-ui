@@ -17,6 +17,8 @@ from gpsd_panel import GpsdPanel
 
 from map_panel import MapPanel
 
+from datamodel import DataModel
+
 import json
 
 gi.require_version("Gdk", "4.0")
@@ -47,6 +49,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_title("GNSS UI")
 
         self.add_header_menu()
+        self.data = DataModel()
 
         self.rootbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
@@ -226,6 +229,8 @@ class MainWindow(Gtk.ApplicationWindow):
         GLib.idle_add(self.update_statusbar)
 
     def update_panels(self, msg):
+        self.data.updateNMEA(msg)
+
         self.position_info_panel.update(msg)
         self.satellites_info_panel_gps.update(msg)
         self.satellites_info_panel_glonass.update(msg)
@@ -237,6 +242,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.map_panel.update(msg)
 
     def updateJSON(self, jobject):
+        self.data.updateJSON(jobject)
         self.received_json_message_ct += 1
         GLib.idle_add(self.update_statusbar)
         # print(">> JSON UPDATE:", json.dumps(jobject, indent=4))
@@ -365,11 +371,16 @@ class MyApp(Adw.Application):
         # print("exiting ...")
         # self.win.handle_exit()
         pass
-    
+
     def on_shutdown(self, data):
         # print("shutting down ...")
         # self.win.handle_exit()
         pass
 
+
 app = MyApp(application_id="mr-ingenious.gnss-ui")
-app.run(sys.argv)
+try:
+    app.run(sys.argv)
+except Exception as e:
+    print(f"Unexpected: {e=}, {type(e)=}")
+    exit(0)

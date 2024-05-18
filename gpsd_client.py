@@ -31,7 +31,8 @@ class GpsdClient(threading.Thread):
         return True
 
     def signalize_stop(self):
-        self.send_disable_command()
+        if self.socket:
+            self.send_disable_command()
         # time.sleep(1)
         self.do_run = False
 
