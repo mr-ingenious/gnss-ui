@@ -12,13 +12,46 @@ class DataModel:
         logging.config.fileConfig("gnss-ui/log.ini")
         self.logger = logging.getLogger("datamodel")
 
+        self.__setup_structure()
+
+    def __setup_structure(self):
         self.position = dict()
+        self.position["update_ts"] = 0
+        self.position["data"] = {
+            "dop": {"hdop": 0.0, "vdop": 0.0, "pdop": 0.0},
+            "latitude": {
+                "string": "",
+                "decimal": 0.0,
+                "direction": "",
+            },
+            "longitude": {
+                "string": "",
+                "decimal": 0.0,
+                "direction": "",
+            },
+            "heading": {"track": "", "mag_var": ""},
+            "gps_quality": {"indicator": 0, "description": ""},
+            "altitude": 0.0,
+            "geoid_separation": 0.0,
+            "speed": {"knots": 0.0, "kph": 0.0},
+            "status": "",
+        }
+
         self.time = dict()
+        self.time["update_ts"] = 0
+        self.time["data"] = dict()
+
         self.satellites = dict()
+        self.satellites["update_ts"] = 0
+        self.satellites["data"] = dict()
 
         self.last_values_update = 0
         self.lon_dec = 0.0
         self.lat_dec = 0.0
+
+    def reset(self):
+        self.logger.info("resetting data structure")
+        self.__setup_structure()
 
     def update(self, msg):
         pass
@@ -61,54 +94,58 @@ class DataModel:
                 status = "active"
             else:
                 status = "void"
-            self.position["latitude"] = {
+            self.position["data"]["latitude"] = {
                 "string": msg["latitude"],
                 "decimal": self.lat_dec,
                 "direction": msg["latitude_dir"],
             }
 
-            self.position["longitude"] = {
+            self.position["data"]["longitude"] = {
                 "string": msg["longitude"],
                 "decimal": self.lon_dec,
                 "direction": msg["longitude_dir"],
             }
 
-            self.position["status"] = status
-            self.position["heading"] = {
+            self.position["data"]["status"] = status
+            self.position["data"]["heading"] = {
                 "track": msg["track_deg"],
                 "mag_var": msg["magvar_deg"],
             }
 
-            # self.position["link"] = self.__create_gmaps_link(
-            #    self.lat_dec, msg["latitude_dir"], self.lon_dec, msg["longitude_dir"]
-            # )
-
-            # speed = 0.0
-            # if msg["speed"] != "":
-            #    speed = float(msg["speed"])
-
-            # self.position.update({"speed": {"knots": speed}})
-            # self.position["speed"]["knots"] = speed
             self.position["update_ts"] = time.time()
 
-            json_object = json.dumps(self.position, indent=4)
-            self.logger.debug("Datamodel - position: %s", json_object)
+            # json_object = json.dumps(self.position, indent=4)
+            # self.logger.debug("Datamodel - position: %s", json_object)
 
-            json_object = json.dumps(self.satellites, indent=4)
-            self.logger.debug("Datamodel - satellites: %s", json_object)
+            # json_object = json.dumps(self.satellites, indent=4)
+            # self.logger.debug("Datamodel - satellites: %s", json_object)
 
-            self.logger.debug("Datamodel - time: %s", self.time)
+            # self.logger.debug("Datamodel - time: %s", self.time)
 
         elif msg["type"] == "GSV":
             # self.logger.debug("GSV: " + repr(msg))
+
             for i in range(1, 5):
                 try:
                     if msg["sat_" + str(i) + "_num"] != "":
                         name = msg["talker"] + "-" + msg["sat_" + str(i) + "_num"]
 
-                        el = 0
-                        az = 0
-                        snr = 0
+                        if None == self.satellites["data"].get(name):
+                            self.logger.debug("creating new sat entry for %s", name)
+                            self.satellites["data"][name] = {
+                                "prn": "",
+                                "system": "",
+                                "elevation": -1,
+                                "azimuth": -1,
+                                "snr": -1,
+                                "update_ts": 0,
+                                "used": False,
+                                "last_used_ts": time.time(),
+                            }
+
+                        el = -1
+                        az = -1
+                        snr = -1
                         if msg["sat_" + str(i) + "_elevation_deg"] != "":
                             el = int(msg["sat_" + str(i) + "_elevation_deg"])
                         if msg["sat_" + str(i) + "_azimuth_deg"] != "":
@@ -116,13 +153,19 @@ class DataModel:
                         if msg["sat_" + str(i) + "_snr_db"] != "":
                             snr = int(msg["sat_" + str(i) + "_snr_db"])
 
-                        self.satellites.update(
+                        self.satellites["data"].update(
                             {
                                 name: {
+                                    "prn": msg["sat_" + str(i) + "_num"],
+                                    "system": msg["talker"],
                                     "elevation": el,
                                     "azimuth": az,
                                     "snr": snr,
                                     "update_ts": time.time(),
+                                    "used": self.satellites["data"][name]["used"],
+                                    "last_used_ts": self.satellites["data"][name][
+                                        "last_used_ts"
+                                    ],
                                 }
                             }
                         )
@@ -139,8 +182,24 @@ class DataModel:
             for i in range(1, 13):
                 if msg["id_" + str(i)] != "":
                     name = msg["talker"] + "-" + msg["id_" + str(i)]
-                    # self.satellites.update({name: {"used": True}})
-                    self.satellites[name]["used"] = True
+                    self.logger.debug("GSA info for %s", name)
+
+                    if None == self.satellites["data"].get(name):
+                        self.logger.debug("creating new sat entry for %s", name)
+                        self.satellites["data"][name] = {
+                            "prn": msg["id_" + str(i)],
+                            "system": msg["talker"],
+                            "elevation": -1,
+                            "azimuth": -1,
+                            "snr": -1,
+                            "update_ts": 0,
+                            "used": True,
+                            "last_used_ts": time.time(),
+                        }
+
+                    self.satellites["data"][name]["update_ts"] = time.time()
+                    self.satellites["data"][name]["used"] = True
+                    self.satellites["data"][name]["last_used_ts"] = time.time()
 
             hdop = 0.0
             if msg["hdop"] != "":
@@ -154,11 +213,31 @@ class DataModel:
             if msg["vdop"] != "":
                 vdop = float(msg["vdop"])
 
-            self.position.update({"dop": {"hdop": hdop, "vdop": vdop, "pdop": pdop}})
+            self.position["data"].update(
+                {"dop": {"hdop": hdop, "vdop": vdop, "pdop": pdop}}
+            )
 
             self.position["update_ts"] = time.time()
 
             self.satellites["update_ts"] = time.time()
+
+            keys = list(self.satellites["data"].keys())
+
+            for k in keys:
+                # self.logger.debug("--- %s", k)
+                if k != "update_ts":
+                    if (time.time() - self.satellites["data"].get(k)["update_ts"]) > 5:
+                        self.logger.debug("sat %s: data too old, removing.", k)
+                        self.satellites["data"].pop(k)
+                    elif (
+                        time.time() - self.satellites["data"].get(k)["last_used_ts"]
+                        > 10
+                    ):
+                        # self.logger.debug(
+                        #    "sat %s: last_used_ts too old, setting 'used' to 'false'.", k
+                        # )
+                        self.satellites["data"].get(k)["used"] = False
+                        self.satellites["data"].get(k)["last_used_ts"] = time.time()
 
         elif msg["type"] == "GGA":
             # self.logger.debug("GGA: " + repr(msg))
@@ -174,7 +253,7 @@ class DataModel:
             else:
                 gq = "unknown"
 
-            self.position["gps_quality"] = {"indicator": gqr, "description": gq}
+            self.position["data"]["gps_quality"] = {"indicator": gqr, "description": gq}
 
             altitude = 0.0
             if msg["antenna_asl"] != "":
@@ -184,8 +263,8 @@ class DataModel:
             if msg["geosep"] != "":
                 geosep = float(msg["geosep"])
 
-            self.position["altitude"] = altitude
-            self.position["geoid_separation"] = geosep
+            self.position["data"]["altitude"] = altitude
+            self.position["data"]["geoid_separation"] = geosep
 
             self.position["update_ts"] = time.time()
 
@@ -199,7 +278,9 @@ class DataModel:
             speed_kph = 0.0
             if msg["speed_kph"] != "":
                 speed_kph = float(msg["speed_kph"])
-            self.position.update({"speed": {"knots": speed_knots, "kph": speed_kph}})
+            self.position["data"].update(
+                {"speed": {"knots": speed_knots, "kph": speed_kph}}
+            )
             self.position["update_ts"] = time.time()
 
         elif msg["type"] == "GNS":

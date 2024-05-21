@@ -16,17 +16,23 @@
     padding-left: 5px;
     padding-right: 5px;
 
-    margin-top: 10px;
-    margin-bottom: 10px;
-    margin-left: 10px;
-    margin-right: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
 
     background-color: lightgray;
 
     border-radius: 5px;
-    border: 2px solid grey;
+    border: 1px solid grey;
 
     box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+
+.preferences_dialog {
+    color: blue;
+    background-color: lightblue;
+    border: 1px solid grey;
 }
 
 .label {
@@ -76,6 +82,16 @@
 
 .satellites_info_panel {
     background-color: lightskyblue;
+    min-width: 300px;
+}
+
+.satellites_graphic_panel {
+    background-color: lightskyblue;
+}
+
+.position_panel {
+    background-color: lightgreen;
+    min-width: 220px;
 }
 
 .sv_grid {
@@ -88,6 +104,10 @@
 .sv_value {
     border: 1px solid darkgray;
     min-width: 30px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-top: 0px;
+    padding-bottom: 0px;
 }
 
 .map_panel {

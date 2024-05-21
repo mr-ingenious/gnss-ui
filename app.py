@@ -9,10 +9,10 @@ from observer import Observer
 
 from position_info_panel import PositionInfoPanel
 from satellites_info_panel import SatellitesInfoPanel
-
 from satellites_graphic_panel import SatellitesGraphicPanel
 
-from dyndata_panel import DyndataPanel
+from preferences_dialog import PreferencesDialog
+
 from gpsd_panel import GpsdPanel
 
 # from map_panel import MapPanel
@@ -37,8 +37,10 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
+
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         logging.config.fileConfig("gnss-ui/log.ini")
         self.logger = logging.getLogger("app")
@@ -48,12 +50,11 @@ class MainWindow(Gtk.ApplicationWindow):
         self.received_nmea_message_ct = 0
         self.received_json_message_ct = 0
 
-        super().__init__(*args, **kwargs)
-
         self.set_default_size(1024, 768)
         self.set_title("GNSS UI")
 
         self.add_header_menu()
+        
         self.data = DataModel()
 
         self.rootbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -77,24 +78,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.position_info_panel = PositionInfoPanel()
         self.mainbox.append(self.position_info_panel)
 
-        self.dyndata_info_panel = DyndataPanel()
-        self.mainbox.append(self.dyndata_info_panel)
-
-        self.satellites_info_panel_gps = SatellitesInfoPanel("GPS", "GP")
-        self.satellites_info_panel_gps.set_visible(False)
-        self.mainbox.append(self.satellites_info_panel_gps)
-
-        self.satellites_info_panel_glonass = SatellitesInfoPanel("Glonass", "GL")
-        self.satellites_info_panel_glonass.set_visible(False)
-        self.mainbox.append(self.satellites_info_panel_glonass)
-
-        self.satellites_info_panel_galileo = SatellitesInfoPanel("Galileo", "GA")
-        self.satellites_info_panel_galileo.set_visible(False)
-        self.mainbox.append(self.satellites_info_panel_galileo)
-
-        self.satellites_info_panel_beidou = SatellitesInfoPanel("Beidou", "PQ")
-        self.satellites_info_panel_beidou.set_visible(False)
-        self.mainbox.append(self.satellites_info_panel_beidou)
+        self.satellites_info_panel = SatellitesInfoPanel()
+        self.satellites_info_panel.set_visible(True)
+        self.mainbox.append(self.satellites_info_panel)
 
         self.satellites_graphic_panel = SatellitesGraphicPanel()
         self.satellites_graphic_panel.set_visible(False)
@@ -137,15 +123,13 @@ class MainWindow(Gtk.ApplicationWindow):
     def update_panels(self, msg):
         self.data.updateNMEA(msg)
 
-        self.position_info_panel.update(msg)
-        self.satellites_info_panel_gps.update(msg)
-        self.satellites_info_panel_glonass.update(msg)
-        self.satellites_info_panel_galileo.update(msg)
-        self.satellites_info_panel_beidou.update(msg)
+        self.position_info_panel.update(self.data.position)
 
-        self.satellites_graphic_panel.update(msg)
-        self.dyndata_info_panel.update(msg)
-        self.map_panel.update(msg)
+        self.satellites_info_panel.update(self.data.satellites)
+
+        self.satellites_graphic_panel.update(self.data.satellites)
+
+        self.map_panel.update(self.data.position)
 
     def updateJSON(self, jobject):
         self.data.updateJSON(jobject)
@@ -162,20 +146,10 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def on_position_button_pressed(self, button):
         self.position_info_panel.set_visible(not self.position_info_panel.get_visible())
-        self.dyndata_info_panel.set_visible(not self.dyndata_info_panel.get_visible())
 
     def on_satellites_button_pressed(self, button):
-        self.satellites_info_panel_gps.set_visible(
-            not self.satellites_info_panel_gps.get_visible()
-        )
-        self.satellites_info_panel_glonass.set_visible(
-            not self.satellites_info_panel_glonass.get_visible()
-        )
-        self.satellites_info_panel_galileo.set_visible(
-            not self.satellites_info_panel_galileo.get_visible()
-        )
-        self.satellites_info_panel_beidou.set_visible(
-            not self.satellites_info_panel_beidou.get_visible()
+        self.satellites_info_panel.set_visible(
+            not self.satellites_info_panel.get_visible()
         )
 
     def on_satellites_graphic_button_pressed(self, button):
@@ -185,10 +159,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def on_map_button_pressed(self, button):
         self.map_panel.set_visible(not self.map_panel.get_visible())
-
-        #if self.map_panel.get_visible():
-            # self.map_panel.show_map()
-            # self.map_panel.go_to_location(49.59, 11.02)
 
     def add_header_menu(self):
         self.header = Gtk.HeaderBar()
@@ -209,7 +179,7 @@ class MainWindow(Gtk.ApplicationWindow):
         # Create a menu button
         self.hamburger = Gtk.MenuButton()
         self.hamburger.set_popover(self.popover)
-        self.hamburger.set_icon_name("open-menu-symbolic")  # Give it a nice icon
+        self.hamburger.set_icon_name("open-menu-symbolic")
 
         # Add menu button to the header bar
         self.header.pack_start(self.hamburger)
@@ -217,15 +187,22 @@ class MainWindow(Gtk.ApplicationWindow):
         # set app name
         GLib.set_application_name("My App")
 
+        # Add start gpsd menu point
         action = Gio.SimpleAction.new("start-gpsd", None)
         action.connect("activate", self.on_start_gpsd_button_pressed)
         self.add_action(action)
         menu.append("start gpsd", "win.start-gpsd")
 
+        # Add settings menu point
+        settings_action = Gio.SimpleAction.new("settings", None)
+        settings_action.connect("activate", self.show_settings_dialog)
+        self.add_action(settings_action)
+        menu.append("settings", "win.settings")
+
         # Add an about dialog
-        action = Gio.SimpleAction.new("about", None)
-        action.connect("activate", self.show_about_dialog)
-        self.add_action(action)
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect("activate", self.show_about_dialog)
+        self.add_action(about_action)
         menu.append("About", "win.about")
 
     def create_and_start_gpsdc(self):
@@ -260,6 +237,13 @@ class MainWindow(Gtk.ApplicationWindow):
 
         dialog.set_visible(True)
 
+    def show_settings_dialog(self, action, param):
+        self.logger.info("showing settings dialog")
+
+        dialog = PreferencesDialog()
+        # dialog.set_visible(True)
+
+
 class MyApp(Adw.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -270,6 +254,7 @@ class MyApp(Adw.Application):
     def on_activate(self, app):
         self.win = MainWindow(application=app)
         self.win.present()
+        # dialog = PreferencesDialog()
 
     def on_exit(self, window, data):
         # print("exiting ...")
@@ -280,6 +265,7 @@ class MyApp(Adw.Application):
         # print("shutting down ...")
         # self.win.handle_exit()
         pass
+
 
 app = MyApp(application_id="mr-ingenious.gnss-ui")
 app.run(sys.argv)

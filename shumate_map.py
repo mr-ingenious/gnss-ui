@@ -15,12 +15,14 @@ from gi.repository import Gtk, Shumate
 
 # Code inspired by GNOME Workbench
 
+
 class ShumateMapPanel(Panel):
     def __init__(self):
         super().__init__()
-        
+
         self.last_map_update = 0
-        self.last_values_update = 0
+        self.last_latitude = 0.0
+        self.last_longitude = 0.0
 
         logging.config.fileConfig("gnss-ui/log.ini")
         self.logger = logging.getLogger("app")
@@ -38,6 +40,8 @@ class ShumateMapPanel(Panel):
         self.registry = Shumate.MapSourceRegistry.new_with_defaults()
 
         # Use OpenStreetMap as the source
+        # Alternatives: https://gitlab.gnome.org/GNOME/libshumate/-/blob/main/shumate/shumate-map-source-registry.h?ref_type=heads
+
         self.map_source = self.registry.get_by_id(Shumate.MAP_SOURCE_OSM_MAPNIK)
         self.viewport = self.map_widget.get_viewport()
 
@@ -46,7 +50,7 @@ class ShumateMapPanel(Panel):
 
         # Reference map source used by MarkerLayer
         self.viewport.set_reference_map_source(self.map_source)
-        self.viewport.set_zoom_level(5)
+        self.viewport.set_zoom_level(12)
 
         self.marker_layer = Shumate.MarkerLayer(
             viewport=self.viewport,
@@ -89,31 +93,14 @@ class ShumateMapPanel(Panel):
         self.map_widget.get_map().go_to(latitude, longitude)
         self.marker.set_location(latitude, longitude)
 
-
-    def __convert_coordinates_to_decimal(self):
-        self.lat_dec = round(self.lat)
-        lat_fract = self.lat - self.lat_dec
-        lat_fract = lat_fract / 0.60
-        self.lat_dec += lat_fract
-
-        self.lon_dec = round(self.lon)
-        lon_fract = self.lon - self.lon_dec
-        lon_fract = lon_fract / 0.60
-        self.lon_dec += lon_fract
-
-    def update(self, msg):
-        if msg["type"] == "RMC" and msg["latitude"] != "" and msg["longitude"] != "":
-            self.logger.debug(
-                "received RMC sentence with valid coordinates -> updating view"
-            )
-
-            self.lat = float(msg["latitude"]) / 100
-            self.lon = float(msg["longitude"]) / 100
-
-            self.__convert_coordinates_to_decimal()
-
-            self.last_values_update = time.time()
-
-            if (self.get_visible()) and time.time() - self.last_map_update > 5:
-                self.last_map_update = time.time()
-                self.go_to_location(self.lat_dec, self.lon_dec)
+    def update(self, position_info):
+        if (self.get_visible()) and time.time() - self.last_map_update > 5:
+            if (
+                position_info["data"]["latitude"]["decimal"] != 0.0
+                and position_info["data"]["longitude"]["decimal"] != 0.0
+            ):
+                self.last_latitude = position_info["data"]["latitude"]["decimal"]
+                self.last_longitude = position_info["data"]["longitude"]["decimal"]
+                
+            self.go_to_location(self.last_latitude, self.last_longitude)
+            self.last_map_update = time.time()

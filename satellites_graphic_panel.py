@@ -31,34 +31,13 @@ class SatellitesGraphicPanel(Panel):
 
         self.append(self.drawing_area)
 
-        self.last_gsa_update = time.time()
-        self.last_gsv_update = time.time()
+        self.last_update = time.time()
 
     def draw(self, area, context, width, height, user_data):
-        # print("draw: width=", width, ", height=", height)
+        print("draw: width=", width, ", height=", height)
 
-        context.set_source_rgb(0.8, 0.8, 0.8)
-        context.paint()
-
-        # Draw a line
-        # context.set_source_rgb(0.5, 0.0, 0.5)
-        # context.set_line_width(3)
-        # context.move_to(10, 10)
-        # context.line_to(width - 10, height - 10)
-        # context.stroke()
-
-        # Draw a rectangle
-        # context.set_source_rgb(0.8, 0.8, 0.1)
-        # context.move_to(10, 10)
-        # context.rectangle(20, 20, 50, 20)
-        # context.fill()
-
-        # Draw some text
-        # c.set_source_rgb(0.1, 0.1, 0.1)
-        # c.select_font_face("Sans")
-        # c.set_font_size(13)
-        # c.move_to(25, 35)
-        # c.show_text("Test")
+        # context.set_source_rgb(0.8, 0.8, 0.8)
+        # context.paint()
 
         # arcs
 
@@ -78,6 +57,9 @@ class SatellitesGraphicPanel(Panel):
         context.set_source_rgb(0.2, 0.2, 0.2)
         context.select_font_face("Sans")
         context.set_font_size(10)
+        
+        if width > 500 and height > 500:
+            context.set_font_size(15)
 
         self.draw_element(context, width, height, 30, 30, "30°")
         self.draw_element(context, width, height, 30, 60, "60°")
@@ -95,16 +77,19 @@ class SatellitesGraphicPanel(Panel):
             context.move_to(x, y)
             context.show_text(str(30 * i) + "°")
 
-        for sat, value in self.satellites.items():
-            if value["tlk"] == "GP":
+        for sat, value in self.satellites["data"].items():
+            if value["azimuth"] == -1 and value["elevation"] == -1:
+                continue
+
+            if value["system"] == "GP":
                 context.set_source_rgb(0.5, 0.0, 0.2)
-            elif value["tlk"] == "GA":
+            elif value["system"] == "GA":
                 context.set_source_rgb(0.2, 0.5, 0.0)
-            elif value["tlk"] == "PQ":
+            elif value["system"] == "PQ":
                 context.set_source_rgb(0.0, 0.2, 0.5)
-            elif value["tlk"] == "GL":
+            elif value["system"] == "GL":
                 context.set_source_rgb(0.7, 0.5, 0.0)
-            elif value["tlk"] == "GN":
+            elif value["system"] == "GN":
                 context.set_source_rgb(0.0, 0.7, 0.5)
             else:
                 context.set_source_rgb(0.0, 0.0, 0.0)
@@ -113,8 +98,8 @@ class SatellitesGraphicPanel(Panel):
                 context,
                 width,
                 height,
-                int(value["az"]),
-                int(value["el"]),
+                int(value["azimuth"]),
+                int(value["elevation"]),
                 sat,
                 ("", "-used-")[value["used"]],
             )
@@ -126,6 +111,9 @@ class SatellitesGraphicPanel(Panel):
 
         context.select_font_face("Sans")
         context.set_font_size(11)
+        
+        if width > 500 and height > 500:
+            context.set_font_size(20)
 
         context.set_line_width(4)
 
@@ -152,52 +140,8 @@ class SatellitesGraphicPanel(Panel):
             context.set_font_size(9)
             context.show_text(subtitle)
 
-    def update(self, msg):
-        if msg["type"] == "GSA" and (time.time() - self.last_gsa_update >= 1):
-            self.last_gsa_update = time.time()
-
-            for i in range(1, 13):
-                sat_id = msg["id_" + str(i)]
-                if sat_id != "":
-                    key = msg["talker"] + "-" + sat_id
-                    if self.satellites.get(key) != None:
-                        self.satellites.get(key).update({"used": True})
-
-        if msg["type"] == "GSV":
-            if time.time() - self.last_gsv_update > 5:
-                for key in list(self.satellites.keys()):
-                    if time.time() - self.satellites.get(key)["last_update"] > 5:
-                        self.satellites.pop(key)
-
-                self.drawing_area.queue_draw()
-                self.last_gsv_update = time.time()
-
-            for i in range(1, int(msg["num_sat_info_in_msg"]) + 1):
-                if (
-                    msg["sat_" + str(i) + "_elevation_deg"] != ""
-                    and msg["sat_" + str(i) + "_azimuth_deg"] != ""
-                    and msg["sat_" + str(i) + "_num"] != ""
-                ):
-                    sat_key = msg["talker"] + "-" + msg["sat_" + str(i) + "_num"]
-                    if self.satellites.get(sat_key) == None:
-                        self.satellites[
-                            msg["talker"] + "-" + msg["sat_" + str(i) + "_num"]
-                        ] = {
-                            "tlk": msg["talker"],
-                            "el": msg["sat_" + str(i) + "_elevation_deg"],
-                            "az": msg["sat_" + str(i) + "_azimuth_deg"],
-                            "snr": msg["sat_" + str(i) + "_snr_db"],
-                            "used": False,
-                            "last_update": time.time(),
-                        }
-
-                    else:
-                        self.satellites.get(sat_key).update(
-                            {
-                                "tlk": msg["talker"],
-                                "el": msg["sat_" + str(i) + "_elevation_deg"],
-                                "az": msg["sat_" + str(i) + "_azimuth_deg"],
-                                "snr": msg["sat_" + str(i) + "_snr_db"],
-                                "last_update": time.time(),
-                            }
-                        )
+    def update(self, sat_info):
+        if time.time() - self.last_update > 2:
+            self.satellites = sat_info
+            self.drawing_area.queue_draw()
+            self.last_update = time.time()
