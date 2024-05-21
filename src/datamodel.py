@@ -9,7 +9,7 @@ import logging
 class DataModel:
     def __init__(self):
 
-        logging.config.fileConfig("gnss-ui/log.ini")
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("datamodel")
 
         self.__setup_structure()

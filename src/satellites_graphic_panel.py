@@ -34,7 +34,7 @@ class SatellitesGraphicPanel(Panel):
         self.last_update = time.time()
 
     def draw(self, area, context, width, height, user_data):
-        print("draw: width=", width, ", height=", height)
+        # self.logger.debug("draw: width=", width, ", height=", height)
 
         # context.set_source_rgb(0.8, 0.8, 0.8)
         # context.paint()
@@ -57,7 +57,7 @@ class SatellitesGraphicPanel(Panel):
         context.set_source_rgb(0.2, 0.2, 0.2)
         context.select_font_face("Sans")
         context.set_font_size(10)
-        
+
         if width > 500 and height > 500:
             context.set_font_size(15)
 
@@ -111,7 +111,7 @@ class SatellitesGraphicPanel(Panel):
 
         context.select_font_face("Sans")
         context.set_font_size(11)
-        
+
         if width > 500 and height > 500:
             context.set_font_size(20)
 

@@ -32,7 +32,7 @@ gi.require_version("WebKit", "6.0")
 from gi.repository import Gtk, Gdk, Gio, GLib, Adw, WebKit
 
 css_provider = Gtk.CssProvider()
-css_provider.load_from_path("./gnss-ui/appstyle.css")
+css_provider.load_from_path("./gnss-ui/assets/appstyle.css")
 Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
@@ -42,7 +42,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        logging.config.fileConfig("gnss-ui/log.ini")
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
 
         self.gpsd_hostname = "localhost"

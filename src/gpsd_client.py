@@ -13,7 +13,7 @@ class GpsdClient(threading.Thread):
     def __init__(self):
         super().__init__()
 
-        logging.config.fileConfig("gnss-ui/log.ini")
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("gpsd")
 
     def set_params(self, hostname, port, observer):

@@ -18,7 +18,7 @@ class SatellitesInfoPanel(Panel):
 
         self.last_update = 0
 
-        logging.config.fileConfig("gnss-ui/log.ini")
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
 
         self.logger = logging.getLogger("app")
 

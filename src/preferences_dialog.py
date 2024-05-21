@@ -11,7 +11,7 @@ class PreferencesDialog(Gtk.Window):
 
     def __init__(self):
         super().__init__()
-        logging.config.fileConfig("gnss-ui/log.ini")
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
 
         self.set_default_size(700, 400)

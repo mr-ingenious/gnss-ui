@@ -24,7 +24,7 @@ class ShumateMapPanel(Panel):
         self.last_latitude = 0.0
         self.last_longitude = 0.0
 
-        logging.config.fileConfig("gnss-ui/log.ini")
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
 
         self.set_css_classes(["panel", "map_panel"])
@@ -61,7 +61,7 @@ class ShumateMapPanel(Panel):
         self.marker.set_location(0, 0)
         self.marker.set_css_classes(["map_marker"])
         self.marker_icon = Gtk.Image()
-        self.marker_icon.set_from_file("gnss-ui/marker_icon_large.png")
+        self.marker_icon.set_from_file("gnss-ui/assets/marker_icon_large.png")
         self.marker.set_child(self.marker_icon)
 
         self.marker_layer.add_marker(self.marker)

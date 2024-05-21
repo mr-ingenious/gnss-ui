@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkWindow" id="preferences_window">
+    <property name="title" translatable="yes">Preferences</property>
+    <child>
+      <object class="GtkBox" id="content_area">
+        <child>
+            <object class="GtkBox">
+                <property name="orientation">1</property>
+                <child>
+                    <object class="GtkLinkButton">
+                        <property name="label" translatable="true">API Reference</property>
+                        <property name="uri">https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.5/class.ApplicationWindow.html</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkLinkButton">
+                        <property name="label" translatable="true">Human Interface Guidelines</property>
+                        <property name="uri">https://developer.gnome.org/hig/patterns/containers/windows.html</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

@@ -14,7 +14,7 @@ class GpsdParser:
         self._observer = observer
         self.data = ""
 
-        logging.config.fileConfig("gnss-ui/log.ini")
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("gpsd")
 
         # logging.basicConfig(
