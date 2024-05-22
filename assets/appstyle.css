@@ -114,6 +114,15 @@
     min-width: 600px;
 }
 
+.map_hint {
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 5px;
+    border: 1px solid #000000;
+    margin-top: 20px;
+    padding: 10px;
+    color: white;
+}
+
 .statusbar {
     background-color: lightgray;
     padding-top: 5px;

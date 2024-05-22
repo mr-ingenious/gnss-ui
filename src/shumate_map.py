@@ -32,6 +32,17 @@ class ShumateMapPanel(Panel):
         self.set_hexpand(True)
         self.set_vexpand(True)
 
+        self.panel_label = Gtk.Label(label="Map")
+        self.panel_label.set_css_classes(["panel_title"])
+        self.append(self.panel_label)
+
+        self.hint_shown = True
+        self.overlay = Gtk.Overlay()
+        self.hint = Gtk.Label(label="NO CURRENT / VALID POSITION")
+        self.hint.set_halign(Gtk.Align.CENTER)
+        self.hint.set_valign(Gtk.Align.START)
+        self.hint.set_css_classes(["map_hint"])
+
         self.map_widget = Shumate.SimpleMap()
         self.map_widget.get_map().set_go_to_duration(1000)
 
@@ -66,8 +77,12 @@ class ShumateMapPanel(Panel):
 
         self.marker_layer.add_marker(self.marker)
         self.map_widget.get_map().add_layer(self.marker_layer)
+        self.map_widget.set_visible(True)
 
-        self.append(self.map_widget)
+        self.overlay.set_child(self.map_widget)
+        self.overlay.add_overlay(self.hint)
+
+        self.append(self.overlay)
 
     def go_to_location(self, latitude, longitude):
         if math.isnan(latitude) or math.isnan(longitude):
@@ -99,8 +114,18 @@ class ShumateMapPanel(Panel):
                 position_info["data"]["latitude"]["decimal"] != 0.0
                 and position_info["data"]["longitude"]["decimal"] != 0.0
             ):
+                if self.hint_shown == True:
+                    self.overlay.remove_overlay(self.hint)
+                    self.hint_shown = False
+
                 self.last_latitude = position_info["data"]["latitude"]["decimal"]
                 self.last_longitude = position_info["data"]["longitude"]["decimal"]
-                
-            self.go_to_location(self.last_latitude, self.last_longitude)
+
+                self.go_to_location(self.last_latitude, self.last_longitude)
+
+            else:
+                if self.hint_shown == False:
+                    self.overlay.add_overlay(self.hint)
+                    self.hint_shown = True
+
             self.last_map_update = time.time()
