@@ -43,6 +43,18 @@ class ShumateMapPanel(Panel):
         self.hint.set_valign(Gtk.Align.START)
         self.hint.set_css_classes(["map_hint"])
 
+        self.b1_icon = Gtk.Picture()
+        self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
+
+        self.autocenter_map = True
+        self.b1 = Gtk.Button(label="Toggle Auto center")
+        self.b1.set_child(self.b1_icon)
+        self.b1.set_halign(Gtk.Align.END)
+        self.b1.set_valign(Gtk.Align.START)
+        self.b1.set_tooltip_text("Toggle map auto center")
+        self.b1.set_css_classes(["map_button", "map_button:active", "map_button:hover"])
+        self.b1.connect("clicked", self.on_autocenter_button_pressed)
+
         self.map_widget = Shumate.SimpleMap()
         self.map_widget.get_map().set_go_to_duration(1000)
 
@@ -81,8 +93,18 @@ class ShumateMapPanel(Panel):
 
         self.overlay.set_child(self.map_widget)
         self.overlay.add_overlay(self.hint)
+        self.overlay.add_overlay(self.b1)
 
         self.append(self.overlay)
+
+    def on_autocenter_button_pressed(self, button):
+        self.logger.debug("toggle autocenter pressed")
+        self.autocenter_map = not self.autocenter_map
+        if self.autocenter_map == True:
+            self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
+            self.go_to_location(self.last_latitude, self.last_longitude)
+        else:
+            self.b1_icon.set_filename("gnss-ui/assets/center_icon_inactive.svg")
 
     def go_to_location(self, latitude, longitude):
         if math.isnan(latitude) or math.isnan(longitude):
@@ -105,7 +127,10 @@ class ShumateMapPanel(Panel):
             "map panel: going to location lat: %f, lon: %f", latitude, longitude
         )
         # self.viewport.set_zoom_level(15)
-        self.map_widget.get_map().go_to(latitude, longitude)
+
+        if self.autocenter_map:
+            self.map_widget.get_map().go_to(latitude, longitude)
+
         self.marker.set_location(latitude, longitude)
 
     def update(self, position_info):
