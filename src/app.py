@@ -3,6 +3,9 @@
 import sys
 import gi
 
+import threading
+import time
+
 from left_menu_panel import LeftMenuPanel
 from gpsd_client import GpsdClient
 from observer import Observer
@@ -29,7 +32,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("WebKit", "6.0")
 
-from gi.repository import Gtk, Gdk, Gio, GLib, Adw, WebKit
+from gi.repository import Gtk, Gdk, Gio, GLib, Adw
 
 css_provider = Gtk.CssProvider()
 css_provider.load_from_path("./gnss-ui/assets/appstyle.css")
@@ -38,6 +41,23 @@ Gtk.StyleContext.add_provider_for_display(
 )
 
 APP_VERSION = "0.1.1"
+
+
+class PanelRefresher(threading.Thread):
+    def __init__(self, target):
+        threading.Thread.__init__(self)
+        self.do_run = True
+        self.target = target
+
+    def signalize_stop(self):
+        self.do_run = False
+
+    def run(self):
+        while self.do_run:
+            print("[REFRESHER THREAD]")
+            self.target.update_panels()
+            time.sleep(1)
+
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
@@ -114,12 +134,16 @@ class MainWindow(Gtk.ApplicationWindow):
         self.gpsdc = GpsdClient()
         self.gpsdc.set_params(self.gpsd_hostname, self.gpsd_port, self)
 
+        self.panels_update_thread = PanelRefresher(self)
+        self.panels_update_thread.start()
+
         self.main_status_text.set_label("started.")
 
         self.connect("close-request", self.handle_close_request)
 
     def handle_close_request(self, data):
         self.logger.debug("AW: close-request")
+        self.panels_update_thread.signalize_stop()
         self.gpsdc.signalize_stop()
 
     def handle_exit(self):
@@ -130,18 +154,17 @@ class MainWindow(Gtk.ApplicationWindow):
     def updateNmea(self, msg):
         self.received_nmea_message_ct += 1
 
-        GLib.idle_add(self.update_panels, msg)
+        GLib.idle_add(self.data.updateNMEA, msg)
         GLib.idle_add(self.update_statusbar)
 
-    def update_panels(self, msg):
-        self.data.updateNMEA(msg)
+    def update_panels(self):
+        self.logger.debug("updating panels ...")
+        GLib.idle_add(self.update_panels_internal)
 
+    def update_panels_internal(self):
         self.position_info_panel.update(self.data.position)
-
         self.satellites_info_panel.update(self.data.satellites)
-
         self.satellites_graphic_panel.update(self.data.satellites)
-
         self.map_panel.update(self.data.position, self.data.satellites)
 
     def updateJSON(self, jobject):

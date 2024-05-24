@@ -153,8 +153,7 @@ class ShumateMapPanel(Panel):
         self.marker.set_location(latitude, longitude)
 
     def update(self, position_info, satellites_info):
-        if (self.get_visible()) and time.time() - self.last_map_update > 5:
-
+        if self.get_visible():
             self.position_dashboard.update(position_info)
             self.satellites_dashboard.update(satellites_info)
 

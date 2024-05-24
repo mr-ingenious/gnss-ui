@@ -181,7 +181,7 @@ class SatellitesGraphicPanel(Panel):
                 context.show_text(subtitle)
 
     def update(self, sat_info):
-        if self.get_visible() and time.time() - self.last_update > 2:
+        if self.get_visible():
             self.satellites = sat_info
             self.drawing_area.queue_draw()
             self.last_update = time.time()

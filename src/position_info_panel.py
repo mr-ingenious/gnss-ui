@@ -87,7 +87,7 @@ class PositionInfoPanel(Panel):
                 next_element = next_element.get_next_sibling()
 
     def update(self, position_info):
-        if self.get_visible() and time.time() - self.last_update >= 2:
+        if self.get_visible():
             self.__change_value(
                 "latitude",
                 "{:.6f}".format(position_info["data"]["latitude"]["decimal"])
