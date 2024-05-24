@@ -50,12 +50,8 @@ class SatellitesGraphicPanel(Panel):
         # context.paint()
 
         # draw circles
+        context.set_source_rgb(1.0, 1.0, 1.0)
 
-        if self.is_dashboard:
-            context.set_source_rgb(1.0, 1.0, 1.0)
-        else:
-            context.set_source_rgb(1.0, 1.0, 1.0)
-            # context.set_source_rgb(0.5, 0.5, 0.5)
         context.set_line_width(1)
 
         for i in range(1, 5):
@@ -79,9 +75,11 @@ class SatellitesGraphicPanel(Panel):
             context.set_font_size(15)
 
         # add some value tags
-        self.draw_element(context, width, height, 30, 30, " 30°")
-        self.draw_element(context, width, height, 30, 60, " 60°")
-        self.draw_element(context, width, height, 30, 90, " 90°")
+        
+        if not self.is_dashboard:
+            self.draw_element(context, width, height, 30, 30, " 30°")
+            self.draw_element(context, width, height, 30, 60, " 60°")
+            self.draw_element(context, width, height, 30, 90, " 90°")
 
         context.set_line_width(2)
 

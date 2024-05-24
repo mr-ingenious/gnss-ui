@@ -37,7 +37,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.1"
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
