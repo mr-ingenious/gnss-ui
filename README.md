@@ -16,6 +16,8 @@ Some screenshots:
 
 ![Main window with all information](./screenshots/gnss-ui3.png)
 
+![Main window with all information](./screenshots/gnss-ui4.png)
+
 ## Prerequisites
 A GPSD instance must run in the background to get real data.
 
