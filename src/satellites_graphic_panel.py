@@ -3,6 +3,7 @@
 import gi
 import time
 import math
+import logging
 
 gi.require_version("Gtk", "4.0")
 
@@ -12,26 +13,35 @@ from panel import Panel
 
 
 class SatellitesGraphicPanel(Panel):
-    def __init__(self):
+    def __init__(self, as_dashboard=False):
         super().__init__()
 
-        self.drawing_area = Gtk.DrawingArea()
+        self.is_dashboard = as_dashboard
+
+        self.last_update = time.time()
 
         self.satellites = dict()
 
-        self.set_css_classes(["satellites_graphic_panel", "panel"])
+        logging.config.fileConfig("gnss-ui/assets/log.ini")
+        self.logger = logging.getLogger("app")
+
+        self.drawing_area = Gtk.DrawingArea()
+
+        if self.is_dashboard:
+            self.set_css_classes(["map_dashboard", "satellites_dashboard"])
+            self.drawing_area.set_content_height(200)
+            self.drawing_area.set_content_width(200)
+        else:
+            self.set_css_classes(["satellites_graphic_panel", "panel"])
+            self.drawing_area.set_content_height(400)
+            self.drawing_area.set_content_width(400)
 
         self.drawing_area.set_hexpand(True)
         self.drawing_area.set_vexpand(True)
 
-        self.drawing_area.set_content_height(400)
-        self.drawing_area.set_content_width(400)
-
         self.drawing_area.set_draw_func(self.draw, None)
 
         self.append(self.drawing_area)
-
-        self.last_update = time.time()
 
     def draw(self, area, context, width, height, user_data):
         # self.logger.debug("draw: width=", width, ", height=", height)
@@ -39,14 +49,21 @@ class SatellitesGraphicPanel(Panel):
         # context.set_source_rgb(0.8, 0.8, 0.8)
         # context.paint()
 
-        # arcs
+        # draw circles
 
-        context.set_source_rgb(0.5, 0.5, 0.5)
+        if self.is_dashboard:
+            context.set_source_rgb(1.0, 1.0, 1.0)
+        else:
+            context.set_source_rgb(1.0, 1.0, 1.0)
+            # context.set_source_rgb(0.5, 0.5, 0.5)
         context.set_line_width(1)
 
         for i in range(1, 5):
             # x, y, radius, start_angle, stop_angle
+            
             r = min(width, height) / 2 - 10
+            if self.is_dashboard:
+                r = min(width, height) / 2
             radius = r - (r / 4 * i) + 1
             context.arc(width / 2, height / 2, radius, 0, 2 * math.pi)
             context.stroke()
@@ -54,28 +71,52 @@ class SatellitesGraphicPanel(Panel):
         # draw lines
         max_len = 0.8 * (min(width, height) / 2 - 10)
 
-        context.set_source_rgb(0.2, 0.2, 0.2)
+        # context.set_source_rgb(0.2, 0.2, 0.2)
         context.select_font_face("Sans")
         context.set_font_size(10)
 
         if width > 500 and height > 500:
             context.set_font_size(15)
 
-        self.draw_element(context, width, height, 30, 30, "30°")
-        self.draw_element(context, width, height, 30, 60, "60°")
-        self.draw_element(context, width, height, 30, 90, "90°")
+        # add some value tags
+        self.draw_element(context, width, height, 30, 30, " 30°")
+        self.draw_element(context, width, height, 30, 60, " 60°")
+        self.draw_element(context, width, height, 30, 90, " 90°")
 
-        context.set_line_width(1)
+        context.set_line_width(2)
 
-        for i in range(0, 12):
-            x = width / 2 + max_len * math.cos(math.radians(30 * (i - 3)))
-            y = height / 2 + max_len * math.sin(math.radians(30 * (i - 3)))
+        step_range = range(0, 12)
+        angle_inc = 30
+
+        if self.is_dashboard:
+            step_range = range(0, 4)
+            angle_inc = 90
+
+        for i in step_range:
+            x = width / 2 + max_len * math.cos(math.radians(angle_inc * (i - 3)))
+            y = height / 2 + max_len * math.sin(math.radians(angle_inc * (i - 3)))
+
+            x_offset = (
+                round(math.sin(math.radians(angle_inc * (i))), 1)
+                # * math.cos(math.radians(30 * (i)))
+                * (width / 30)
+            )
+            y_offset = (
+                round(math.cos(math.radians(angle_inc * (i + 6))), 1)
+                # * math.sin(math.radians(angle_inc * (i)))
+                * (height / 30)
+            )
 
             context.move_to(width / 2, height / 2)
             context.line_to(x, y)
             context.stroke()
-            context.move_to(x, y)
-            context.show_text(str(30 * i) + "°")
+
+            if not self.is_dashboard:
+                context.move_to(x + x_offset, y + y_offset)
+                context.show_text(str(angle_inc * i) + "°")
+
+        if not "data" in self.satellites:
+            return
 
         for sat, value in self.satellites["data"].items():
             if value["azimuth"] == -1 and value["elevation"] == -1:
@@ -132,16 +173,17 @@ class SatellitesGraphicPanel(Panel):
         context.line_to(px + 2, py - 2)
         context.stroke()
 
-        context.move_to(px, py + 15)
-        context.show_text(title)
+        if not self.is_dashboard:
+            context.move_to(px, py + 15)
+            context.show_text(title)
 
-        if len(subtitle) > 0:
-            context.move_to(px, py + 25)
-            context.set_font_size(9)
-            context.show_text(subtitle)
+            if len(subtitle) > 0:
+                context.move_to(px, py + 25)
+                context.set_font_size(9)
+                context.show_text(subtitle)
 
     def update(self, sat_info):
-        if time.time() - self.last_update > 2:
+        if self.get_visible() and time.time() - self.last_update > 2:
             self.satellites = sat_info
             self.drawing_area.queue_draw()
             self.last_update = time.time()

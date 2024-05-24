@@ -142,7 +142,7 @@ class SatellitesInfoPanel(Panel):
                 next_element = next_element.get_next_sibling()
 
     def update(self, sat_info):
-        if time.time() - self.last_update > 2:
+        if self.get_visible() and time.time() - self.last_update > 2:
             idx = 1
 
             keys = sorted(sat_info["data"].keys())

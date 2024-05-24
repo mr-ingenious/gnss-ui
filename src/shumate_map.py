@@ -13,16 +13,20 @@ gi.require_version("Shumate", "1.0")
 
 from gi.repository import Gtk, Shumate
 
+from position_info_panel import PositionInfoPanel
+from satellites_graphic_panel import SatellitesGraphicPanel
+
 # Code inspired by GNOME Workbench
 
 
 class ShumateMapPanel(Panel):
-    def __init__(self):
+    def __init__(self, with_title=True):
         super().__init__()
 
         self.last_map_update = 0
         self.last_latitude = 0.0
         self.last_longitude = 0.0
+        self.initial_zoom = 4
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
@@ -32,9 +36,18 @@ class ShumateMapPanel(Panel):
         self.set_hexpand(True)
         self.set_vexpand(True)
 
-        self.panel_label = Gtk.Label(label="Map")
-        self.panel_label.set_css_classes(["panel_title"])
-        self.append(self.panel_label)
+        if with_title:
+            self.panel_label = Gtk.Label(label="Map")
+            self.panel_label.set_css_classes(["panel_title"])
+            self.append(self.panel_label)
+
+        self.position_dashboard = PositionInfoPanel(as_dashboard=True)
+        self.position_dashboard.set_halign(Gtk.Align.END)
+        self.position_dashboard.set_valign(Gtk.Align.END)
+
+        self.satellites_dashboard = SatellitesGraphicPanel(as_dashboard=True)
+        self.satellites_dashboard.set_halign(Gtk.Align.START)
+        self.satellites_dashboard.set_valign(Gtk.Align.END)
 
         self.hint_shown = True
         self.overlay = Gtk.Overlay()
@@ -73,7 +86,7 @@ class ShumateMapPanel(Panel):
 
         # Reference map source used by MarkerLayer
         self.viewport.set_reference_map_source(self.map_source)
-        self.viewport.set_zoom_level(12)
+        self.viewport.set_zoom_level(self.initial_zoom)
 
         self.marker_layer = Shumate.MarkerLayer(
             viewport=self.viewport,
@@ -92,6 +105,8 @@ class ShumateMapPanel(Panel):
         self.map_widget.set_visible(True)
 
         self.overlay.set_child(self.map_widget)
+        self.overlay.add_overlay(self.position_dashboard)
+        self.overlay.add_overlay(self.satellites_dashboard)
         self.overlay.add_overlay(self.hint)
         self.overlay.add_overlay(self.b1)
 
@@ -126,6 +141,10 @@ class ShumateMapPanel(Panel):
         self.logger.debug(
             "map panel: going to location lat: %f, lon: %f", latitude, longitude
         )
+
+        if self.initial_zoom == 4:
+            self.viewport.set_zoom_level(15)
+            self.initial_zoom = -1
         # self.viewport.set_zoom_level(15)
 
         if self.autocenter_map:
@@ -133,8 +152,12 @@ class ShumateMapPanel(Panel):
 
         self.marker.set_location(latitude, longitude)
 
-    def update(self, position_info):
+    def update(self, position_info, satellites_info):
         if (self.get_visible()) and time.time() - self.last_map_update > 5:
+
+            self.position_dashboard.update(position_info)
+            self.satellites_dashboard.update(satellites_info)
+
             if (
                 position_info["data"]["latitude"]["decimal"] != 0.0
                 and position_info["data"]["longitude"]["decimal"] != 0.0

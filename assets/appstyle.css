@@ -41,7 +41,7 @@
 
 .value {
     border: 1px solid darkgray;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.7);
     min-width: 50px;
 
     padding-top: 1px;
@@ -62,7 +62,7 @@
 .gps_values_panel {}
 
 .sidepanel {
-    background-color: gray;
+    background-color: rgba(70, 70, 70, 0.623);
     margin-left: 0px;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -81,16 +81,51 @@
 }
 
 .satellites_info_panel {
-    background-color: lightskyblue;
+    background-color: rgba(135, 206, 250, 0.7);
     min-width: 300px;
 }
 
 .satellites_graphic_panel {
-    background-color: lightskyblue;
+    background-color: rgba(135, 206, 250, 0.7);
+}
+
+.map_dashboard {
+    background-color: rgba(0, 0, 0, 0.65);
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.map_dashboard_label {
+    font-weight: bold;
+    margin: 0px;
+}
+
+.map_dashboard_value {
+    border: 1px solid darkgray;
+    /* background-color: white; */
+    min-width: 50px;
+
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 3px;
+    padding-right: 3px;
+    margin: 0px;
+}
+
+
+.satellites_dashboard {
+    margin-left: 5px;
+    margin-bottom: 65px;
+}
+
+.position_dashboard {
+    color: white;
+    margin-right: 5px;
+    margin-bottom: 30px;
 }
 
 .position_panel {
-    background-color: lightgreen;
+    background-color: rgba(105, 228, 105, 0.7);
     min-width: 220px;
 }
 
@@ -103,6 +138,7 @@
 
 .sv_value {
     border: 1px solid darkgray;
+    background-color: rgba(255, 255, 255, 0.7);
     min-width: 30px;
     padding-left: 2px;
     padding-right: 2px;
@@ -115,7 +151,7 @@
 }
 
 .map_hint {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.65);
     border-radius: 5px;
     border: 1px solid #000000;
     margin-top: 20px;
@@ -157,6 +193,7 @@
 
 .statusbar {
     background-color: lightgray;
+    font-weight: bold;
     padding-top: 5px;
     padding-bottom: 5px;
     padding-left: 10px;

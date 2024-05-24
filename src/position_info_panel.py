@@ -11,11 +11,18 @@ from panel import Panel
 
 
 class PositionInfoPanel(Panel):
-    def __init__(self):
+    def __init__(self, as_dashboard=False):
         super().__init__()
         self.last_update = time.time()
+        self.is_dashboard = as_dashboard
 
-        self.set_css_classes(["position_panel", "panel"])
+        if self.is_dashboard:
+            self.set_css_classes(["position_dashboard", "map_dashboard"])
+        else:
+            self.set_css_classes(["position_panel", "panel"])
+            self.panel_label = Gtk.Label(label="Position")
+            self.panel_label.set_css_classes(["panel_title"])
+            self.append(self.panel_label)
 
         self.grid = Gtk.Grid()
 
@@ -25,9 +32,6 @@ class PositionInfoPanel(Panel):
         self.grid.insert_column(1)
         self.grid.insert_column(1)
 
-        self.panel_label = Gtk.Label(label="Position")
-        self.panel_label.set_css_classes(["panel_title"])
-        self.append(self.panel_label)
         self.append(self.grid)
 
         self.__add_to_grid("latitude", "Latitude:", 1)
@@ -38,7 +42,9 @@ class PositionInfoPanel(Panel):
         self.__add_to_grid("track_magvar", "Track mag. var.", 5)
 
         self.__add_to_grid("speed_kph", "Speed (kph):", 6)
-        self.__add_to_grid("speed_kts", "Speed (kts):", 7)
+
+        if not self.is_dashboard:
+            self.__add_to_grid("speed_kts", "Speed (kts):", 7)
 
         self.__add_to_grid("status", "Status:", 8)
         self.__add_to_grid("gps_quality", "GPS quality:", 9)
@@ -53,11 +59,21 @@ class PositionInfoPanel(Panel):
         self.grid.insert_row(_row)
 
         new_label = Gtk.Label(name=_name + "_label", label=_label)
-        new_label.set_css_classes(["label"])
+
+        if self.is_dashboard:
+            new_label.set_css_classes(["map_dashboard_label"])
+        else:
+            new_label.set_css_classes(["label"])
+
         self.grid.attach(new_label, 1, _row, 1, 1)
 
         new_value = Gtk.Label(name=_name + "_value", label="---")
-        new_value.set_css_classes(["value"])
+
+        if self.is_dashboard:
+            new_value.set_css_classes(["map_dashboard_value"])
+        else:
+            new_value.set_css_classes(["value"])
+
         self.grid.attach(new_value, 2, _row, 1, 1)
 
     def __change_value(self, name, value):
@@ -71,7 +87,7 @@ class PositionInfoPanel(Panel):
                 next_element = next_element.get_next_sibling()
 
     def update(self, position_info):
-        if time.time() - self.last_update >= 2:
+        if self.get_visible() and time.time() - self.last_update >= 2:
             self.__change_value(
                 "latitude",
                 "{:.6f}".format(position_info["data"]["latitude"]["decimal"])
@@ -95,9 +111,11 @@ class PositionInfoPanel(Panel):
             self.__change_value("vdop", str(position_info["data"]["dop"]["vdop"]))
             self.__change_value("altitude", str(position_info["data"]["altitude"]))
             self.__change_value("speed_kph", str(position_info["data"]["speed"]["kph"]))
-            self.__change_value(
-                "speed_kts", str(position_info["data"]["speed"]["knots"])
-            )
+
+            if not self.is_dashboard:
+                self.__change_value(
+                    "speed_kts", str(position_info["data"]["speed"]["knots"])
+                )
             self.__change_value("status", str(position_info["data"]["status"]))
             self.__change_value(
                 "gps_quality", str(position_info["data"]["gps_quality"]["description"])

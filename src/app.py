@@ -37,6 +37,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
+APP_VERSION = "0.1.0"
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
@@ -54,7 +55,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_title("GNSS UI")
 
         self.add_header_menu()
-        
+
         self.data = DataModel()
 
         self.rootbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -63,6 +64,15 @@ class MainWindow(Gtk.ApplicationWindow):
         self.mainbox.set_hexpand(True)
         self.mainbox.set_vexpand(True)
 
+        self.bg_image = Gtk.Picture()
+        self.bg_image.set_filename("gnss-ui/assets/background.jpg")
+        self.bg_image.set_content_fit(Gtk.ContentFit.COVER)
+
+        self.overlaybox = Gtk.Overlay()
+        self.overlaybox.set_hexpand(True)
+        self.overlaybox.set_vexpand(True)
+        self.overlaybox.set_child(self.bg_image)
+
         # self.gpsd_panel = GpsdPanel(self, self.gpsd_hostname, self.gpsd_port)
         # self.mainbox.append(self.gpsd_panel)
 
@@ -70,23 +80,26 @@ class MainWindow(Gtk.ApplicationWindow):
         self.scrolled_main_box.set_min_content_width(800)
         self.scrolled_main_box.set_min_content_width(600)
         self.scrolled_main_box.set_child(self.mainbox)
-        self.rootbox.append(self.scrolled_main_box)
+
+        self.overlaybox.add_overlay(self.scrolled_main_box)
+        self.rootbox.append(self.overlaybox)
 
         self.left_menu_panel = LeftMenuPanel(self)
         self.mainbox.append(self.left_menu_panel)
 
         self.position_info_panel = PositionInfoPanel()
+        self.position_info_panel.set_visible(False)
         self.mainbox.append(self.position_info_panel)
 
         self.satellites_info_panel = SatellitesInfoPanel()
-        self.satellites_info_panel.set_visible(True)
+        self.satellites_info_panel.set_visible(False)
         self.mainbox.append(self.satellites_info_panel)
 
         self.satellites_graphic_panel = SatellitesGraphicPanel()
         self.satellites_graphic_panel.set_visible(False)
         self.mainbox.append(self.satellites_graphic_panel)
 
-        self.map_panel = ShumateMapPanel()  # MapPanel()
+        self.map_panel = ShumateMapPanel(with_title=False)
         self.map_panel.set_visible(True)
         self.mainbox.append(self.map_panel)
 
@@ -129,7 +142,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.satellites_graphic_panel.update(self.data.satellites)
 
-        self.map_panel.update(self.data.position)
+        self.map_panel.update(self.data.position, self.data.satellites)
 
     def updateJSON(self, jobject):
         self.data.updateJSON(jobject)
@@ -221,7 +234,7 @@ class MainWindow(Gtk.ApplicationWindow):
         dialog = Adw.AboutWindow(transient_for=app.get_active_window())
 
         dialog.set_application_name("GNSS UI")
-        dialog.set_version("0.1")
+        dialog.set_version(APP_VERSION)
         dialog.set_developer_name("mr-ingenious")
         dialog.set_license_type(Gtk.License(Gtk.License.GPL_3_0))
         dialog.set_comments("A simple GNSS UI for Linux")

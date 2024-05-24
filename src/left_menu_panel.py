@@ -8,7 +8,6 @@ from gi.repository import Gtk
 
 from panel import Panel
 
-
 class LeftMenuPanel(Panel):
     def __init__(self, button_event_listener):
         super().__init__()
