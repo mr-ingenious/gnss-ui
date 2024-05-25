@@ -4,7 +4,7 @@ import socket
 import threading
 import time
 import logging
-
+import json
 from gpsd_parser import GpsdParser
 from observer import Observer
 
@@ -15,6 +15,8 @@ class GpsdClient(threading.Thread):
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("gpsd")
+        
+        
 
     def set_params(self, hostname, port, observer):
         self.server_address = (hostname, port)

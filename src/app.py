@@ -23,6 +23,8 @@ from shumate_map import ShumateMapPanel
 
 from datamodel import DataModel
 
+from config_provider import ConfigProvider
+
 import json
 
 import logging
@@ -40,23 +42,27 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.1.1"
+APP_VERSION = "0.2.0"
 
 
 class PanelRefresher(threading.Thread):
-    def __init__(self, target):
+    def __init__(self, target, cycle_sec=2):
         threading.Thread.__init__(self)
+        self.cycle_time_sec = cycle_sec
         self.do_run = True
         self.target = target
+
+    def set_cycle_time_sec(self, cycle_sec):
+        self.cycle_time_sec = cycle_sec
 
     def signalize_stop(self):
         self.do_run = False
 
     def run(self):
         while self.do_run:
-            print("[REFRESHER THREAD]")
+            # print("[REFRESHER THREAD]")
             self.target.update_panels()
-            time.sleep(1)
+            time.sleep(self.cycle_time_sec)
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -66,12 +72,15 @@ class MainWindow(Gtk.ApplicationWindow):
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
 
-        self.gpsd_hostname = "localhost"
-        self.gpsd_port = 2947
+        self.config = ConfigProvider()
+
         self.received_nmea_message_ct = 0
         self.received_json_message_ct = 0
 
-        self.set_default_size(1024, 768)
+        self.set_default_size(
+            self.config.get_param("general/resolution/width", 1024),
+            self.config.get_param("general/resolution/height", 768),
+        )
         self.set_title("GNSS UI")
 
         self.add_header_menu()
@@ -108,19 +117,43 @@ class MainWindow(Gtk.ApplicationWindow):
         self.mainbox.append(self.left_menu_panel)
 
         self.position_info_panel = PositionInfoPanel()
-        self.position_info_panel.set_visible(False)
+        if "position" in self.config.get_param("startup/panels_shown"):
+            self.position_info_panel.set_visible(True)
+        else:
+            self.position_info_panel.set_visible(False)
         self.mainbox.append(self.position_info_panel)
 
         self.satellites_info_panel = SatellitesInfoPanel()
-        self.satellites_info_panel.set_visible(False)
+        if "satellites_list" in self.config.get_param("startup/panels_shown"):
+            self.satellites_info_panel.set_visible(True)
+        else:
+            self.satellites_info_panel.set_visible(False)
         self.mainbox.append(self.satellites_info_panel)
 
         self.satellites_graphic_panel = SatellitesGraphicPanel()
-        self.satellites_graphic_panel.set_visible(False)
+        if "satellites_graphic" in self.config.get_param("startup/panels_shown"):
+            self.satellites_graphic_panel.set_visible(True)
+        else:
+            self.satellites_graphic_panel.set_visible(False)
         self.mainbox.append(self.satellites_graphic_panel)
 
-        self.map_panel = ShumateMapPanel(with_title=False)
-        self.map_panel.set_visible(True)
+        self.map_panel = ShumateMapPanel(
+            with_title=False,
+            initial_zoom_level=self.config.get_param("map_panel/initial_zoom_level", 5),
+            autocenter_map=self.config.get_param("map_panel/auto_center", True),
+            show_satellites_dashboard=self.config.get_param(
+                "map_panel/show_satellites_dashboard", True
+            ),
+            show_position_dashboard=self.config.get_param(
+                "map_panel/show_position_dashboard", True
+            ),
+            start_latitude=self.config.get_param("map_panel/start_latitude", 0.0),
+            start_longitude=self.config.get_param("map_panel/start_longitude", 0.0),
+        )
+        if "map" in self.config.get_param("startup/panels_shown"):
+            self.map_panel.set_visible(True)
+        else:
+            self.map_panel.set_visible(False)
         self.mainbox.append(self.map_panel)
 
         self.main_statusbar = Gtk.Box()
@@ -131,10 +164,12 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.set_child(self.rootbox)
 
-        self.gpsdc = GpsdClient()
-        self.gpsdc.set_params(self.gpsd_hostname, self.gpsd_port, self)
+        if self.config.get_param("startup/connect_to_gpsd"):
+            self.create_and_start_gpsdc()
 
-        self.panels_update_thread = PanelRefresher(self)
+        self.panels_update_thread = PanelRefresher(
+            self, cycle_sec=self.config.get_param("general/panel_refresh_cycle_sec", 2)
+        )
         self.panels_update_thread.start()
 
         self.main_status_text.set_label("started.")
@@ -242,10 +277,15 @@ class MainWindow(Gtk.ApplicationWindow):
         menu.append("About", "win.about")
 
     def create_and_start_gpsdc(self):
-        self.logger.info("creating and starting GPSD ...")
+        self.logger.info("creating and starting gpsd client ...")
         if not hasattr(self, "gpsdc"):
+            self.logger.info("creating new gpsd client instance")
             self.gpsdc = GpsdClient()
-            self.gpsdc.set_params("localhost", 2947, self)
+            self.gpsdc.set_params(
+                self.config.get_param("gpsd/hostname"),
+                self.config.get_param("gpsd/port"),
+                self,
+            )
 
         if not self.gpsdc.is_alive():
             self.gpsdc.start()

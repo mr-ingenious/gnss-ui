@@ -20,13 +20,22 @@ from satellites_graphic_panel import SatellitesGraphicPanel
 
 
 class ShumateMapPanel(Panel):
-    def __init__(self, with_title=True):
+    def __init__(
+        self,
+        with_title=True,
+        autocenter_map=True,
+        start_latitude=48.78,
+        start_longitude=9.17,
+        initial_zoom_level=10,
+        show_satellites_dashboard=True,
+        show_position_dashboard=True,
+    ):
         super().__init__()
 
         self.last_map_update = 0
-        self.last_latitude = 0.0
-        self.last_longitude = 0.0
-        self.initial_zoom = 4
+        self.last_latitude = start_latitude
+        self.last_longitude = start_longitude
+        self.initial_zoom = initial_zoom_level
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
@@ -44,10 +53,12 @@ class ShumateMapPanel(Panel):
         self.position_dashboard = PositionInfoPanel(as_dashboard=True)
         self.position_dashboard.set_halign(Gtk.Align.END)
         self.position_dashboard.set_valign(Gtk.Align.END)
+        self.position_dashboard.set_visible(show_position_dashboard)
 
         self.satellites_dashboard = SatellitesGraphicPanel(as_dashboard=True)
         self.satellites_dashboard.set_halign(Gtk.Align.START)
         self.satellites_dashboard.set_valign(Gtk.Align.END)
+        self.satellites_dashboard.set_visible(show_satellites_dashboard)
 
         self.hint_shown = True
         self.overlay = Gtk.Overlay()
@@ -59,7 +70,7 @@ class ShumateMapPanel(Panel):
         self.b1_icon = Gtk.Picture()
         self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
 
-        self.autocenter_map = True
+        self.autocenter_map = autocenter_map
         self.b1 = Gtk.Button(label="Toggle Auto center")
         self.b1.set_child(self.b1_icon)
         self.b1.set_halign(Gtk.Align.END)
@@ -82,7 +93,7 @@ class ShumateMapPanel(Panel):
         self.viewport = self.map_widget.get_viewport()
 
         self.map_widget.set_map_source(self.map_source)
-        self.map_widget.get_map().center_on(0, 0)
+        self.map_widget.get_map().center_on(self.last_latitude, self.last_longitude)
 
         # Reference map source used by MarkerLayer
         self.viewport.set_reference_map_source(self.map_source)
@@ -94,7 +105,7 @@ class ShumateMapPanel(Panel):
         )
 
         self.marker = Shumate.Marker()
-        self.marker.set_location(0, 0)
+        self.marker.set_location(self.last_latitude, self.last_longitude)
         self.marker.set_css_classes(["map_marker"])
         self.marker_icon = Gtk.Image()
         self.marker_icon.set_from_file("gnss-ui/assets/marker_icon_large.png")
@@ -115,6 +126,7 @@ class ShumateMapPanel(Panel):
     def on_autocenter_button_pressed(self, button):
         self.logger.debug("toggle autocenter pressed")
         self.autocenter_map = not self.autocenter_map
+
         if self.autocenter_map == True:
             self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
             self.go_to_location(self.last_latitude, self.last_longitude)
