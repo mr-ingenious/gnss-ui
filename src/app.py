@@ -16,6 +16,8 @@ from satellites_graphic_panel import SatellitesGraphicPanel
 
 from preferences_dialog import PreferencesDialog
 
+from data_recorder import DataRecorder
+
 from gpsd_panel import GpsdPanel
 
 # from map_panel import MapPanel
@@ -42,7 +44,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
 
 
 class PanelRefresher(threading.Thread):
@@ -137,6 +139,10 @@ class MainWindow(Gtk.ApplicationWindow):
             self.satellites_graphic_panel.set_visible(False)
         self.mainbox.append(self.satellites_graphic_panel)
 
+        # Recorder
+        self.recorder = DataRecorder()
+
+        # Map Panel
         self.map_panel = ShumateMapPanel(
             with_title=False,
             initial_zoom_level=self.config.get_param("map_panel/initial_zoom_level", 5),
@@ -149,6 +155,7 @@ class MainWindow(Gtk.ApplicationWindow):
             ),
             start_latitude=self.config.get_param("map_panel/start_latitude", 0.0),
             start_longitude=self.config.get_param("map_panel/start_longitude", 0.0),
+            recorder=self.recorder,
         )
         if "map" in self.config.get_param("startup/panels_shown"):
             self.map_panel.set_visible(True)
@@ -190,10 +197,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self.received_nmea_message_ct += 1
 
         GLib.idle_add(self.data.updateNMEA, msg)
+
+        if self.data != None:
+            self.recorder.update(self.data)
+
         GLib.idle_add(self.update_statusbar)
 
     def update_panels(self):
-        self.logger.debug("updating panels ...")
+        # self.logger.debug("updating panels ...")
         GLib.idle_add(self.update_panels_internal)
 
     def update_panels_internal(self):

@@ -90,6 +90,7 @@
 }
 
 .map_dashboard {
+    color: white;
     background-color: rgba(0, 0, 0, 0.65);
     border-radius: 5px;
     padding: 5px;
@@ -97,19 +98,27 @@
 
 .map_dashboard_label {
     font-weight: bold;
-    margin: 0px;
+    margin: 2px;
 }
 
 .map_dashboard_value {
     border: 1px solid darkgray;
     /* background-color: white; */
-    min-width: 50px;
+    /* min-width: 50px; */
 
     padding-top: 1px;
     padding-bottom: 1px;
     padding-left: 3px;
     padding-right: 3px;
-    margin: 0px;
+    margin: 2px;
+}
+
+.recording_dashboard {
+    margin-top: 5px;
+    margin-left: 5px;
+    margin-bottom: 30px;
+
+    min-width: 350px;
 }
 
 
@@ -119,7 +128,6 @@
 }
 
 .position_dashboard {
-    color: white;
     margin-right: 5px;
     margin-bottom: 30px;
 }
@@ -160,7 +168,7 @@
     font-weight: bold;
 }
 
-.map_button {
+.autocenter_button {
     background-color: rgba(0, 0, 0, 0.65);
     border-radius: 5px;
     /* border: 1px solid #000000; */
@@ -170,7 +178,7 @@
     color: white;
 }
 
-.map_button:active {
+.autocenter_button:active {
     background-color: rgba(131, 131, 131, 0.65);
     border-radius: 5px;
     /* border: 1px solid #000000; */
@@ -180,12 +188,39 @@
     color: white;
 }
 
-.map_button:hover {
+.autocenter_button:hover {
     background-color: rgba(40, 40, 40, 0.65);
     border-radius: 5px;
     /* border: 1px solid #000000; */
     margin-top: 100px;
     margin-right: 6px;
+    padding: 11px;
+    color: white;
+}
+
+.recording_button {
+    /*background-color: rgba(0, 0, 0, 0.65);*/
+    border-radius: 5px;
+    border: 1px solid #000000;
+    margin: 5px;
+    padding: 11px;
+    color: white;
+}
+
+.recording_button:active {
+    background-color: rgba(131, 131, 131, 0.65);
+    border-radius: 5px;
+    /* border: 1px solid #000000; */
+    margin: 5px;
+    padding: 11px;
+    color: white;
+}
+
+.recording_button:hover {
+    background-color: rgba(40, 40, 40, 0.65);
+    border-radius: 5px;
+    /* border: 1px solid #000000; */
+    margin: 5px;
     padding: 11px;
     color: white;
 }

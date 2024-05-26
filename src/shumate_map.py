@@ -15,6 +15,7 @@ from gi.repository import Gtk, Shumate
 
 from position_info_panel import PositionInfoPanel
 from satellites_graphic_panel import SatellitesGraphicPanel
+from data_recorder_dashboard import DataRecorderDashboard
 
 # Code inspired by GNOME Workbench
 
@@ -29,6 +30,7 @@ class ShumateMapPanel(Panel):
         initial_zoom_level=10,
         show_satellites_dashboard=True,
         show_position_dashboard=True,
+        recorder=None,
     ):
         super().__init__()
 
@@ -50,15 +52,25 @@ class ShumateMapPanel(Panel):
             self.panel_label.set_css_classes(["panel_title"])
             self.append(self.panel_label)
 
+        # Position Dashboard
         self.position_dashboard = PositionInfoPanel(as_dashboard=True)
         self.position_dashboard.set_halign(Gtk.Align.END)
         self.position_dashboard.set_valign(Gtk.Align.END)
         self.position_dashboard.set_visible(show_position_dashboard)
 
+        # Satellites Dashboard
         self.satellites_dashboard = SatellitesGraphicPanel(as_dashboard=True)
         self.satellites_dashboard.set_halign(Gtk.Align.START)
         self.satellites_dashboard.set_valign(Gtk.Align.END)
         self.satellites_dashboard.set_visible(show_satellites_dashboard)
+
+        # Recorder Control
+        self.recorder_dashboard = None
+        if recorder != None:
+            self.recorder_dashboard = DataRecorderDashboard(recorder)
+            self.recorder_dashboard.set_halign(Gtk.Align.CENTER)
+            self.recorder_dashboard.set_valign(Gtk.Align.END)
+            self.recorder_dashboard.set_visible(True)
 
         self.hint_shown = True
         self.overlay = Gtk.Overlay()
@@ -76,7 +88,9 @@ class ShumateMapPanel(Panel):
         self.b1.set_halign(Gtk.Align.END)
         self.b1.set_valign(Gtk.Align.START)
         self.b1.set_tooltip_text("Toggle map auto center")
-        self.b1.set_css_classes(["map_button", "map_button:active", "map_button:hover"])
+        self.b1.set_css_classes(
+            ["autocenter_button", "autocenter_button:active", "autocenter_button:hover"]
+        )
         self.b1.connect("clicked", self.on_autocenter_button_pressed)
 
         self.map_widget = Shumate.SimpleMap()
@@ -118,6 +132,10 @@ class ShumateMapPanel(Panel):
         self.overlay.set_child(self.map_widget)
         self.overlay.add_overlay(self.position_dashboard)
         self.overlay.add_overlay(self.satellites_dashboard)
+
+        if self.recorder_dashboard != None:
+            self.overlay.add_overlay(self.recorder_dashboard)
+
         self.overlay.add_overlay(self.hint)
         self.overlay.add_overlay(self.b1)
 

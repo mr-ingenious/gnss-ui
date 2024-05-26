@@ -87,7 +87,7 @@ class ConfigProvider:
             "last_update": date_time,
             "general": {
                 "panel_refresh_cycle_sec": 10,
-                "resolution": {"height": 768, "width": 1024},
+                "resolution": {"height": 800, "width": 1200},
             },
             "gpsd": {"hostname": "localhost", "port": 2947},
             "startup": {
