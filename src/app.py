@@ -20,8 +20,9 @@ from data_recorder import DataRecorder
 
 from gpsd_panel import GpsdPanel
 
-# from map_panel import MapPanel
 from shumate_map import ShumateMapPanel
+
+from data_recorder_panel import DataRecorderPanel
 
 from datamodel import DataModel
 
@@ -44,7 +45,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.3.1"
 
 
 class PanelRefresher(threading.Thread):
@@ -155,13 +156,25 @@ class MainWindow(Gtk.ApplicationWindow):
             ),
             start_latitude=self.config.get_param("map_panel/start_latitude", 0.0),
             start_longitude=self.config.get_param("map_panel/start_longitude", 0.0),
-            recorder=self.recorder,
+            recorder=None,
+            export_directory=self.config.get_param("recording/export/directory", "./"),
         )
         if "map" in self.config.get_param("startup/panels_shown"):
             self.map_panel.set_visible(True)
         else:
             self.map_panel.set_visible(False)
         self.mainbox.append(self.map_panel)
+
+        self.recorder_panel = DataRecorderPanel(
+            recorder=self.recorder,
+            export_directory=self.config.get_param("recording/export/directory", "./"),
+        )
+        
+        if "recorder" in self.config.get_param("startup/panels_shown"):
+            self.recorder_panel.set_visible(True)
+        else:
+            self.recorder_panel.set_visible(False)
+        self.mainbox.append(self.recorder_panel)
 
         self.main_statusbar = Gtk.Box()
         self.main_statusbar.set_css_classes(["statusbar"])
@@ -212,6 +225,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.satellites_info_panel.update(self.data.satellites)
         self.satellites_graphic_panel.update(self.data.satellites)
         self.map_panel.update(self.data.position, self.data.satellites)
+        self.recorder_panel.update()
 
     def updateJSON(self, jobject):
         self.data.updateJSON(jobject)
@@ -241,6 +255,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def on_map_button_pressed(self, button):
         self.map_panel.set_visible(not self.map_panel.get_visible())
+
+    def on_recorder_button_pressed(self, button):
+        self.recorder_panel.set_visible(not self.recorder_panel.get_visible())
 
     def add_header_menu(self):
         self.header = Gtk.HeaderBar()

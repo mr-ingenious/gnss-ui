@@ -111,6 +111,7 @@ class DataRecorder:
                 self.__add_satellites_info(data.satellites, self.current_recording)
 
     def __init_db(self):
+        self.logger.info("initialize db")
         self.connection = sqlite3.connect("gnss_ui.db", check_same_thread=False)
         cursor = self.connection.cursor()
         try:
@@ -242,6 +243,27 @@ class DataRecorder:
         cursor.execute(sql)
         return cursor.fetchall()
 
+    def get_recording_by_id(self, id):
+        recording = dict()
+        sql = """ SELECT * FROM recordings
+                    WHERE id = ?"""
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id,))
+        recordings = cursor.fetchall()
+
+        if recordings != None:
+            recording = {
+                "id": recordings[0][0],
+                "name": recordings[0][1],
+                "description": recordings[0][2],
+                "type": recordings[0][3],
+                "ts_start": recordings[0][4],
+                "ts_end": recordings[0][5],
+            }
+
+        return recording
+
     def delete_recording_by_id(self, recording_id):
         self.logger.info(
             "delete recording and all associated data with id %i", recording_id
@@ -275,21 +297,10 @@ class DataRecorder:
         cursor.execute(sql, (id,))
         return cursor.fetchall()
 
-    def test(self):
-        self.reset()
-        return
-
-        recordings = self.get_recordings()
-        self.logger.debug("recordings: %s", repr(recordings))
-
-        if len(recordings) > 0:
-            self.delete_recording_by_id(recordings[0][0])
-        else:
-            self.logger.warn("recording not found!")
-
     def reset(self):
+        self.logger.info("db reset")
         cursor = self.connection.cursor()
-        
+
         self.stop_recording()
 
         cursor.execute("DROP TABLE IF EXISTS recordings")

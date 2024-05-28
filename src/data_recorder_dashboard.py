@@ -18,13 +18,13 @@ from datetime import datetime
 
 
 class DataRecorderDashboard(Panel):
-    def __init__(self, recorder):
+    def __init__(self, recorder, export_directory="./"):
         super().__init__()
 
         self.recorder = recorder
-
+        self.export_directory = export_directory
         logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        self.logger = logging.getLogger("recorder")
 
         self.set_css_classes(["recording_dashboard", "map_dashboard"])
 
@@ -66,6 +66,7 @@ class DataRecorderDashboard(Panel):
         self.start_pause_rec_button.connect(
             "clicked", self.on_start_pause_rec_button_pressed
         )
+        self.start_pause_rec_button.set_tooltip_text("start / pause track recording")
         self.start_pause_rec_button.set_css_classes(
             ["recording_button", "recording_button:active", "recording_button:hover"]
         )
@@ -79,6 +80,7 @@ class DataRecorderDashboard(Panel):
         self.stop_rec_button.set_css_classes(
             ["recording_button", "recording_button:active", "recording_button:hover"]
         )
+        self.stop_rec_button.set_tooltip_text("stop track recording")
 
         self.icons_box.append(self.stop_rec_button)
 
@@ -92,6 +94,7 @@ class DataRecorderDashboard(Panel):
         self.reset_rec_button.set_css_classes(
             ["recording_button", "recording_button:active", "recording_button:hover"]
         )
+        self.reset_rec_button.set_tooltip_text("delete all recordings")
         self.icons_box.append(self.reset_rec_button)
 
         # export button
@@ -99,6 +102,7 @@ class DataRecorderDashboard(Panel):
         self.export_rec_button.connect(
             "clicked", self.on_export_recordings_button_pressed
         )
+        self.export_rec_button.set_tooltip_text("export recording to file")
 
         self.export_rec_button.set_css_classes(
             ["recording_button", "recording_button:active", "recording_button:hover"]
@@ -181,22 +185,26 @@ class DataRecorderDashboard(Panel):
         recordings = self.recorder.get_recordings()
 
         if len(recordings) > 0:
-            id = recordings[0][0]
+            for recording in recordings:
+                id = recording[0]
 
-            position_data = self.recorder.get_position_data_by_id(id)
-            rec = dict()
-            rec = {
-                "name": recordings[0][1],
-                "description": recordings[0][2],
-                "ts": recordings[0][4],
-            }
+                position_data = self.recorder.get_position_data_by_id(id)
+                rec = dict()
+                rec = {
+                    "name": recording[1],
+                    "description": recording[2],
+                    "ts": recording[4],
+                }
 
-            ts = datetime.fromtimestamp(rec["ts"])
-            ts_str = ts.strftime("%Y-%m-%dT%H-%M-%S")
+                ts = datetime.fromtimestamp(rec["ts"])
+                ts_str = ts.strftime("%Y-%m-%dT%H-%M-%S")
 
-            t = DataTransformer()
-            gpx = t.to_gpx(rec, position_data, filename="track_" + ts_str + ".gpx")
-            # self.logger.debug("GPX: %s", repr(gpx))
-            self.status_value.set_label("Export done")
+                t = DataTransformer()
+                gpx = t.to_gpx(
+                    rec,
+                    position_data,
+                    filename=self.export_directory + "/track_" + ts_str + ".gpx",
+                )
+                self.status_value.set_label("Export done")
         else:
             self.status_value.set_label("No export")

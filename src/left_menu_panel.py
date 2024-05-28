@@ -36,6 +36,11 @@ class LeftMenuPanel(Panel):
         self.map_button.set_css_classes(["sidepanel_button"])
         self.map_button.connect("clicked", self.on_map_button_pressed)
         self.append(self.map_button)
+        
+        self.recorder_button = Gtk.Button(label="Recorder")
+        self.recorder_button.set_css_classes(["sidepanel_button"])
+        self.recorder_button.connect("clicked", self.on_recorder_button_pressed)
+        self.append(self.recorder_button)
 
     def on_position_button_pressed(self, button):
         self.event_listener.on_position_button_pressed(button)
@@ -48,3 +53,6 @@ class LeftMenuPanel(Panel):
 
     def on_map_button_pressed(self, button):
         self.event_listener.on_map_button_pressed(button)
+        
+    def on_recorder_button_pressed(self, button):
+        self.event_listener.on_recorder_button_pressed(button)

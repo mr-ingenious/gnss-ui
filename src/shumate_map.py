@@ -31,6 +31,7 @@ class ShumateMapPanel(Panel):
         show_satellites_dashboard=True,
         show_position_dashboard=True,
         recorder=None,
+        export_directory="./",
     ):
         super().__init__()
 
@@ -38,6 +39,7 @@ class ShumateMapPanel(Panel):
         self.last_latitude = start_latitude
         self.last_longitude = start_longitude
         self.initial_zoom = initial_zoom_level
+        self.export_directory = export_directory
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
@@ -67,7 +69,9 @@ class ShumateMapPanel(Panel):
         # Recorder Control
         self.recorder_dashboard = None
         if recorder != None:
-            self.recorder_dashboard = DataRecorderDashboard(recorder)
+            self.recorder_dashboard = DataRecorderDashboard(
+                recorder, self.export_directory
+            )
             self.recorder_dashboard.set_halign(Gtk.Align.CENTER)
             self.recorder_dashboard.set_valign(Gtk.Align.END)
             self.recorder_dashboard.set_visible(True)

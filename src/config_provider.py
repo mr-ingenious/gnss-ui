@@ -102,6 +102,7 @@ class ConfigProvider:
                 "start_latitude": 0.0,
                 "start_longitude": 0.0,
             },
+            "recording": {"export": {"export_directory": "./"}},
         }
 
         self.save()
