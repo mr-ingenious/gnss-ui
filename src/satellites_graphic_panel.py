@@ -25,6 +25,10 @@ class SatellitesGraphicPanel(Panel):
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
 
+        self.panel_label = Gtk.Label(label="Satellites Radar")
+        self.panel_label.set_css_classes(["panel_title"])
+        self.append(self.panel_label)
+        
         self.drawing_area = Gtk.DrawingArea()
 
         if self.is_dashboard:

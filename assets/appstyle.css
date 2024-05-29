@@ -78,6 +78,8 @@
     border: 1px solid black;
     color: rgb(255, 255, 255);
     background-color: rgba(0, 0, 0, 0.712);
+
+    min-width: 40px;
 }
 
 .satellites_info_satellite_name {

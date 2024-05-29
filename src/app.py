@@ -45,7 +45,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.3.2"
+APP_VERSION = "0.3.3"
 
 
 class PanelRefresher(threading.Thread):
@@ -90,55 +90,54 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.data = DataModel()
 
-        self.rootbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.root_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-        self.mainbox = Gtk.Box()
-        self.mainbox.set_hexpand(True)
-        self.mainbox.set_vexpand(True)
+        self.main_box = Gtk.Box()
+        self.main_box.set_hexpand(True)
+        self.main_box.set_vexpand(True)
 
         self.bg_image = Gtk.Picture()
         self.bg_image.set_filename("gnss-ui/assets/background.jpg")
         self.bg_image.set_content_fit(Gtk.ContentFit.COVER)
 
-        self.overlaybox = Gtk.Overlay()
-        self.overlaybox.set_hexpand(True)
-        self.overlaybox.set_vexpand(True)
-        self.overlaybox.set_child(self.bg_image)
+        self.overlay_box = Gtk.Overlay()
+        self.overlay_box.set_hexpand(True)
+        self.overlay_box.set_vexpand(True)
+        self.overlay_box.set_child(self.bg_image)
 
         # self.gpsd_panel = GpsdPanel(self, self.gpsd_hostname, self.gpsd_port)
         # self.mainbox.append(self.gpsd_panel)
 
+        self.overlay_root_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
         self.scrolled_main_box = Gtk.ScrolledWindow()
         self.scrolled_main_box.set_min_content_width(800)
         self.scrolled_main_box.set_min_content_width(600)
-        self.scrolled_main_box.set_child(self.mainbox)
+        self.scrolled_main_box.set_child(self.main_box)
 
-        self.overlaybox.add_overlay(self.scrolled_main_box)
-        self.rootbox.append(self.overlaybox)
-
-        self.left_menu_panel = LeftMenuPanel(self)
-        self.mainbox.append(self.left_menu_panel)
+        self.overlay_box.add_overlay(self.overlay_root_box)
+        self.root_box.append(self.overlay_box)
 
         self.position_info_panel = PositionInfoPanel()
         if "position" in self.config.get_param("startup/panels_shown"):
             self.position_info_panel.set_visible(True)
         else:
             self.position_info_panel.set_visible(False)
-        self.mainbox.append(self.position_info_panel)
+        self.main_box.append(self.position_info_panel)
 
         self.satellites_info_panel = SatellitesInfoPanel()
         if "satellites_list" in self.config.get_param("startup/panels_shown"):
             self.satellites_info_panel.set_visible(True)
         else:
             self.satellites_info_panel.set_visible(False)
-        self.mainbox.append(self.satellites_info_panel)
+        self.main_box.append(self.satellites_info_panel)
 
-        self.satellites_graphic_panel = SatellitesGraphicPanel()
+        self.satellites_radar_panel = SatellitesGraphicPanel()
         if "satellites_graphic" in self.config.get_param("startup/panels_shown"):
-            self.satellites_graphic_panel.set_visible(True)
+            self.satellites_radar_panel.set_visible(True)
         else:
-            self.satellites_graphic_panel.set_visible(False)
-        self.mainbox.append(self.satellites_graphic_panel)
+            self.satellites_radar_panel.set_visible(False)
+        self.main_box.append(self.satellites_radar_panel)
 
         # Recorder
         self.recorder = DataRecorder()
@@ -163,26 +162,36 @@ class MainWindow(Gtk.ApplicationWindow):
             self.map_panel.set_visible(True)
         else:
             self.map_panel.set_visible(False)
-        self.mainbox.append(self.map_panel)
+        self.main_box.append(self.map_panel)
 
         self.recorder_panel = DataRecorderPanel(
             recorder=self.recorder,
             export_directory=self.config.get_param("recording/export/directory", "./"),
         )
-        
+
         if "recorder" in self.config.get_param("startup/panels_shown"):
             self.recorder_panel.set_visible(True)
         else:
             self.recorder_panel.set_visible(False)
-        self.mainbox.append(self.recorder_panel)
+        self.main_box.append(self.recorder_panel)
+
+        self.left_menu_panel = LeftMenuPanel(
+            self.position_info_panel,
+            self.satellites_info_panel,
+            self.satellites_radar_panel,
+            self.map_panel,
+            self.recorder_panel,
+        )
+        self.overlay_root_box.append(self.left_menu_panel)
+        self.overlay_root_box.append(self.scrolled_main_box)
 
         self.main_statusbar = Gtk.Box()
         self.main_statusbar.set_css_classes(["statusbar"])
         self.main_status_text = Gtk.Label()
         self.main_statusbar.append(self.main_status_text)
-        self.rootbox.append(self.main_statusbar)
+        self.root_box.append(self.main_statusbar)
 
-        self.set_child(self.rootbox)
+        self.set_child(self.root_box)
 
         if self.config.get_param("startup/connect_to_gpsd"):
             self.create_and_start_gpsdc()
@@ -223,7 +232,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def update_panels_internal(self):
         self.position_info_panel.update(self.data.position)
         self.satellites_info_panel.update(self.data.satellites)
-        self.satellites_graphic_panel.update(self.data.satellites)
+        self.satellites_radar_panel.update(self.data.satellites)
         self.map_panel.update(self.data.position, self.data.satellites)
         self.recorder_panel.update()
 
@@ -239,25 +248,6 @@ class MainWindow(Gtk.ApplicationWindow):
             + ", JSON="
             + str(self.received_json_message_ct)
         )
-
-    def on_position_button_pressed(self, button):
-        self.position_info_panel.set_visible(not self.position_info_panel.get_visible())
-
-    def on_satellites_button_pressed(self, button):
-        self.satellites_info_panel.set_visible(
-            not self.satellites_info_panel.get_visible()
-        )
-
-    def on_satellites_graphic_button_pressed(self, button):
-        self.satellites_graphic_panel.set_visible(
-            not self.satellites_graphic_panel.get_visible()
-        )
-
-    def on_map_button_pressed(self, button):
-        self.map_panel.set_visible(not self.map_panel.get_visible())
-
-    def on_recorder_button_pressed(self, button):
-        self.recorder_panel.set_visible(not self.recorder_panel.get_visible())
 
     def add_header_menu(self):
         self.header = Gtk.HeaderBar()
