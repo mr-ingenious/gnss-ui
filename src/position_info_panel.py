@@ -24,6 +24,10 @@ class PositionInfoPanel(Panel):
             self.panel_label.set_css_classes(["panel_title"])
             self.append(self.panel_label)
 
+            self.panel_frame = Gtk.Frame()
+            self.panel_frame.set_visible(True)
+            self.panel_frame.set_css_classes(["recording_box"])
+
         self.grid = Gtk.Grid()
 
         self.grid.set_row_spacing(10)
@@ -32,7 +36,11 @@ class PositionInfoPanel(Panel):
         self.grid.insert_column(1)
         self.grid.insert_column(1)
 
-        self.append(self.grid)
+        if self.is_dashboard:
+            self.append(self.grid)
+        else:
+            self.panel_frame.set_child(self.grid)
+            self.append(self.panel_frame)
 
         self.__add_to_grid("latitude", "Latitude:", 1)
         self.__add_to_grid("longitude", "Longitude:", 2)

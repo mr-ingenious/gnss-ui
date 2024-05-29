@@ -78,9 +78,9 @@ class DataRecorderPanel(Panel):
         )
         self.start_pause_rec_button.set_tooltip_text("start / pause track recording")
         self.start_pause_rec_button.set_css_classes(["button"])
-        #self.start_pause_rec_button.set_css_classes(
+        # self.start_pause_rec_button.set_css_classes(
         #    ["recording_button", "recording_button:active", "recording_button:hover"]
-        #)
+        # )
         # self.start_pause_rec_button.set_child(self.start_rec_button_icon_inactive)
         self.icons_box.append(self.start_pause_rec_button)
 
@@ -88,10 +88,10 @@ class DataRecorderPanel(Panel):
         self.stop_rec_button = Gtk.Button(label="stop")
         self.stop_rec_button.connect("clicked", self.on_stop_rec_button_pressed)
         self.stop_rec_button.set_css_classes(["button"])
-        #self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
-        #self.stop_rec_button.set_css_classes(
+        # self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
+        # self.stop_rec_button.set_css_classes(
         #    ["recording_button", "recording_button:active", "recording_button:hover"]
-        #)
+        # )
         self.stop_rec_button.set_tooltip_text("stop track recording")
 
         self.icons_box.append(self.stop_rec_button)
@@ -207,7 +207,7 @@ class DataRecorderPanel(Panel):
         self.recording_details_box.append(self.recording_details_controls_box)
 
         self.recording_details_frame.set_visible(False)
-        
+
         self.append(self.recording_details_frame)
 
     def on_start_pause_rec_button_pressed(self, button):
@@ -237,8 +237,8 @@ class DataRecorderPanel(Panel):
         self.recorder.stop_recording()
         self.status_value.set_label(self.recorder.get_status_str())
 
-        #self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
-        #self.start_pause_rec_button.set_child(self.start_rec_button_icon_inactive)
+        # self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
+        # self.start_pause_rec_button.set_child(self.start_rec_button_icon_inactive)
 
         rec = self.recorder.get_current_recording()
 
@@ -287,11 +287,11 @@ class DataRecorderPanel(Panel):
         recordings = self.recorder.get_recordings()
         self.recordings_table_box.remove_all()
 
-        #if len(recordings) == 0:
+        # if len(recordings) == 0:
         #    self.list_frame.set_visible(False)
-        #else:
+        # else:
         #    self.list_frame.set_visible(True)
-        #    
+        #
         for recording in recordings:
             recording_icon = Gtk.Picture()
             recording_icon.set_filename("gnss-ui/assets/map_icon.svg")
@@ -305,16 +305,16 @@ class DataRecorderPanel(Panel):
             ts = datetime.fromtimestamp(recording[4])
             ts_str = ts.strftime("%Y-%m-%d %H:%M:%S")
 
+            pos_count = self.recorder.get_position_data_count_by_id(recording[0])
+            sat_count = self.recorder.get_satellite_data_count_by_id(recording[0])
             recording_box.append(
                 Gtk.Label(
                     label="Recording "
                     + ts_str
-                    # + recording[1]
-                    # + " ("
-                    # + str(recording[4])
-                    # + " - "
-                    # + str(recording[5])
-                    # + ")"
+                    + "\nposition data: "
+                    + str(pos_count)
+                    + "\nsatellite data:"
+                    + str(sat_count)
                 )
             )
             self.recordings_table_box.append(recording_box)

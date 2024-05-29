@@ -80,9 +80,36 @@
     background-color: rgba(0, 0, 0, 0.712);
 }
 
+.satellites_info_satellite_name {
+    color: blue;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
 .satellites_info_panel {
     background-color: rgba(135, 206, 250, 0.7);
-    min-width: 300px;
+    min-width: 350px;
+}
+
+.satellites_info_label {
+    color: rgb(66, 66, 66);
+    font-weight: normal;
+    margin-left: 10px;
+}
+
+.satellites_info_value {
+    font-weight: bold;
+    color: black;
+    border: 0px solid darkgray;
+    background-color: rgba(255, 255, 255, 0);
+    min-width: 35px;
+
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 3px;
+    padding-right: 3px;
+
+    margin-left: 2px;
 }
 
 .satellites_graphic_panel {

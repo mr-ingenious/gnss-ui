@@ -290,12 +290,40 @@ class DataRecorder:
         cursor.execute(sql, (id,))
         return cursor.fetchall()
 
+    def get_position_data_count_by_id(self, id):
+        sql = """ SELECT count(*) FROM position_records where recording_id = ?"""
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id,))
+        return cursor.fetchone()[0]
+
+    def get_position_data_count(self):
+        sql = """ SELECT count(*) FROM position_records"""
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id,))
+        return cursor.fetchone()[0]
+
     def get_satellite_data_by_id(self, id):
         sql = """ SELECT * FROM satellite_records where recording_id = ?"""
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
         return cursor.fetchall()
+
+    def get_satellite_data_count_by_id(self, id):
+        sql = """ SELECT count(*) FROM satellite_records where recording_id = ?"""
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id,))
+        return cursor.fetchone()[0]
+    
+    def get_satellite_data_count(self):
+        sql = """ SELECT count(*) FROM satellite_records"""
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (id,))
+        return cursor.fetchone()[0]
 
     def reset(self):
         self.logger.info("db reset")
