@@ -24,10 +24,6 @@ class SatellitesGraphicPanel(Panel):
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
-
-        self.panel_label = Gtk.Label(label="Satellites Radar")
-        self.panel_label.set_css_classes(["panel_title"])
-        self.append(self.panel_label)
         
         self.drawing_area = Gtk.DrawingArea()
 
@@ -36,6 +32,9 @@ class SatellitesGraphicPanel(Panel):
             self.drawing_area.set_content_height(200)
             self.drawing_area.set_content_width(200)
         else:
+            self.panel_label = Gtk.Label(label="Satellites Radar")
+            self.panel_label.set_css_classes(["panel_title"])
+            self.append(self.panel_label)
             self.set_css_classes(["satellites_graphic_panel", "panel"])
             self.drawing_area.set_content_height(400)
             self.drawing_area.set_content_width(400)
