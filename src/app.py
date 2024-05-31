@@ -14,7 +14,7 @@ from position_info_panel import PositionInfoPanel
 from satellites_info_panel2 import SatellitesInfoPanel
 from satellites_graphic_panel import SatellitesGraphicPanel
 
-from preferences_dialog import PreferencesDialog
+from preferences_dialog2 import PreferencesDialog
 
 from data_recorder import DataRecorder
 
@@ -45,7 +45,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.3.4"
+APP_VERSION = "0.3.6"
 
 
 class PanelRefresher(threading.Thread):
@@ -147,7 +147,7 @@ class MainWindow(Gtk.ApplicationWindow):
             with_title=False,
             initial_zoom_level=self.config.get_param("map_panel/initial_zoom_level", 5),
             autocenter_map=self.config.get_param("map_panel/auto_center", True),
-            show_satellites_dashboard=self.config.get_param(
+            show_satellites_radar_dashboard=self.config.get_param(
                 "map_panel/show_satellites_dashboard", True
             ),
             show_position_dashboard=self.config.get_param(
@@ -271,10 +271,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.hamburger.set_icon_name("open-menu-symbolic")
 
         # Add menu button to the header bar
-        self.header.pack_start(self.hamburger)
+        self.header.pack_end(self.hamburger)
 
         # set app name
-        GLib.set_application_name("My App")
+        GLib.set_application_name("GNSS-UI")
 
         # Add start gpsd menu point
         action = Gio.SimpleAction.new("start-gpsd", None)
@@ -334,7 +334,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def show_settings_dialog(self, action, param):
         self.logger.info("showing settings dialog")
 
-        dialog = PreferencesDialog()
+        dialog = PreferencesDialog(self.config)
         # dialog.set_visible(True)
 
 
