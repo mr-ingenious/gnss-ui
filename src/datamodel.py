@@ -4,6 +4,7 @@ import time
 import json
 import pprint
 import logging
+import math
 
 
 class DataModel:
@@ -46,8 +47,6 @@ class DataModel:
         self.satellites["data"] = dict()
 
         self.last_values_update = 0
-        self.lon_dec = 0.0
-        self.lat_dec = 0.0
 
     def reset(self):
         self.logger.info("resetting data structure")
@@ -56,16 +55,16 @@ class DataModel:
     def update(self, msg):
         pass
 
-    def __convert_coordinates_to_decimal(self):
-        self.lat_dec = round(self.lat)
-        lat_fract = self.lat - self.lat_dec
-        lat_fract = lat_fract / 0.60
-        self.lat_dec += lat_fract
+    def __convert_coordinates_to_decimal(self, degree, direction):
+        degree_tmp = float(degree) / 100
+        decimal = math.floor(degree_tmp)
+        fract = (degree_tmp - decimal) / 0.6
+        decimal += fract
 
-        self.lon_dec = round(self.lon)
-        lon_fract = self.lon - self.lon_dec
-        lon_fract = lon_fract / 0.60
-        self.lon_dec += lon_fract
+        if direction == "S" or direction == "W":
+            decimal = -1 * decimal
+
+        return decimal
 
     def __create_gmaps_link(self, lat, lat_dir, lon, lon_dir):
         return (
@@ -79,30 +78,33 @@ class DataModel:
 
     def updateNMEA(self, msg):
         # self.logger.debug("DataModel: NMEA update, msg: %s", msg["type"])
-
         if msg["type"] == "RMC":
+            lat_dec = 0.0
+            lon_dec = 0.0
+
             if msg["latitude"] != "" and msg["longitude"] != "":
-                self.lat = float(msg["latitude"]) / 100
-                self.lon = float(msg["longitude"]) / 100
-                self.__convert_coordinates_to_decimal()
-            else:
-                self.lat = 0.0
-                self.lon = 0.0
-                self.__convert_coordinates_to_decimal()
+                lat_dec = self.__convert_coordinates_to_decimal(
+                    msg["latitude"], msg["latitude_dir"]
+                )
+
+                lon_dec = self.__convert_coordinates_to_decimal(
+                    msg["longitude"], msg["longitude_dir"]
+                )
 
             if msg["status"] == "A":
                 status = "active"
             else:
                 status = "void"
+
             self.position["data"]["latitude"] = {
                 "string": msg["latitude"],
-                "decimal": self.lat_dec,
+                "decimal": lat_dec,
                 "direction": msg["latitude_dir"],
             }
 
             self.position["data"]["longitude"] = {
                 "string": msg["longitude"],
-                "decimal": self.lon_dec,
+                "decimal": lon_dec,
                 "direction": msg["longitude_dir"],
             }
 
