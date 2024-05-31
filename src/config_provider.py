@@ -85,24 +85,26 @@ class ConfigProvider:
         self.config = {
             "created": date_time,
             "last_update": date_time,
-            "general": {
-                "panel_refresh_cycle_sec": 10,
-                "resolution": {"height": 800, "width": 1200},
+            "config": {
+                "general": {
+                    "panel_refresh_cycle_sec": 10,
+                    "resolution": {"height": 800, "width": 1200},
+                },
+                "gpsd": {"hostname": "localhost", "port": 2947},
+                "startup": {
+                    "connect_to_gpsd": True,
+                    "panels_shown": ["map", "satellites_list"],
+                },
+                "map_panel": {
+                    "auto_center": True,
+                    "initial_zoom_level": 5,
+                    "show_satellites_dashboard": True,
+                    "show_position_dashboard": True,
+                    "start_latitude": 0.0,
+                    "start_longitude": 0.0,
+                },
+                "recording": {"export": {"export_directory": "./"}},
             },
-            "gpsd": {"hostname": "localhost", "port": 2947},
-            "startup": {
-                "connect_to_gpsd": True,
-                "panels_shown": ["map", "satellites_list"],
-            },
-            "map_panel": {
-                "auto_center": True,
-                "initial_zoom_level": 5,
-                "show_satellites_dashboard": True,
-                "show_position_dashboard": True,
-                "start_latitude": 0.0,
-                "start_longitude": 0.0,
-            },
-            "recording": {"export": {"export_directory": "./"}},
         }
 
         self.save()
@@ -112,6 +114,7 @@ class ConfigProvider:
 
     def get_param(self, path, default=None):
         # self.logger.debug("++++ path: %s", path)
+        path = "config/" + path
         pparts = path.replace("//", "/").split("/")
 
         val = None
@@ -148,3 +151,6 @@ class ConfigProvider:
 
         self.logger.debug("(found: %s): %s = %s", repr(found), path, repr(val))
         return val
+
+    def get_all_params(self):
+        return self.config

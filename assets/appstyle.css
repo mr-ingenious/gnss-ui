@@ -4,7 +4,7 @@
 }
 
 .panel_title {
-    font-size: 15px;
+    font-size: 18px;
     font-weight: bold;
     padding-top: 10px;
     padding-bottom: 20px;
@@ -30,9 +30,41 @@
 }
 
 .preferences_dialog {
-    color: blue;
-    background-color: lightblue;
+    background-color: lightgray;
+    color: black;
     border: 1px solid grey;
+    min-width: 800px;
+}
+
+.preferences_row {
+    background-color: lightgray;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.preferences_label {
+    font-weight: bold;
+    font-size: 15px;
+    margin-left: 5px;
+    min-width: 300px;
+}
+
+.preferences_value {
+    background-color: rgb(236, 235, 235);
+    border: 1px solid gray;
+    font-size: 15px;
+    margin-right: 5px;
+    min-width: 400px;
+
+}
+
+.preferences_buttons_area {
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 20px;
+    margin-bottom: 5px;
 }
 
 .label {
@@ -51,10 +83,10 @@
 }
 
 .button {
-    margin-top: 2px;
-    margin-bottom: 2px;
-    margin-left: 2px;
-    margin-right: 2px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+    margin-right: 4px;
 }
 
 .gpsd_panel {}
@@ -75,9 +107,10 @@
     margin-bottom: 10px;
     margin-left: 1px;
     margin-right: 1px;
-    border: 1px solid black;
+    border: 1px solid darkgray;
     color: rgb(255, 255, 255);
-    background-color: rgba(0, 0, 0, 0.712);
+    background-color: rgba(0, 0, 0, 1);
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 10px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
 
     min-width: 40px;
 }
@@ -304,4 +337,5 @@
 
 .map_marker {
     color: brown;
+    min-width: 50px;
 }

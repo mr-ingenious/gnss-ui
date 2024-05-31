@@ -28,7 +28,7 @@ class ShumateMapPanel(Panel):
         start_latitude=48.78,
         start_longitude=9.17,
         initial_zoom_level=10,
-        show_satellites_dashboard=True,
+        show_satellites_radar_dashboard=True,
         show_position_dashboard=True,
         recorder=None,
         export_directory="./",
@@ -60,11 +60,11 @@ class ShumateMapPanel(Panel):
         self.position_dashboard.set_valign(Gtk.Align.END)
         self.position_dashboard.set_visible(show_position_dashboard)
 
-        # Satellites Dashboard
-        self.satellites_dashboard = SatellitesGraphicPanel(as_dashboard=True)
-        self.satellites_dashboard.set_halign(Gtk.Align.START)
-        self.satellites_dashboard.set_valign(Gtk.Align.END)
-        self.satellites_dashboard.set_visible(show_satellites_dashboard)
+        # Satellites Radar Dashboard
+        self.satellites_radar_dashboard = SatellitesGraphicPanel(as_dashboard=True)
+        self.satellites_radar_dashboard.set_halign(Gtk.Align.START)
+        self.satellites_radar_dashboard.set_valign(Gtk.Align.END)
+        self.satellites_radar_dashboard.set_visible(show_satellites_radar_dashboard)
 
         # Recorder Control
         self.recorder_dashboard = None
@@ -76,7 +76,7 @@ class ShumateMapPanel(Panel):
             self.recorder_dashboard.set_valign(Gtk.Align.END)
             self.recorder_dashboard.set_visible(True)
 
-        self.hint_shown = True
+        self.is_valid_location = True
         self.overlay = Gtk.Overlay()
         self.hint = Gtk.Label(label="NO CURRENT / VALID POSITION")
         self.hint.set_halign(Gtk.Align.CENTER)
@@ -124,8 +124,8 @@ class ShumateMapPanel(Panel):
 
         self.marker = Shumate.Marker()
         self.marker.set_location(self.last_latitude, self.last_longitude)
-        self.marker.set_css_classes(["map_marker"])
         self.marker_icon = Gtk.Image()
+        self.marker_icon.set_css_classes(["map_marker"])
         self.marker_icon.set_from_file("gnss-ui/assets/marker_icon_large.png")
         self.marker.set_child(self.marker_icon)
 
@@ -135,7 +135,7 @@ class ShumateMapPanel(Panel):
 
         self.overlay.set_child(self.map_widget)
         self.overlay.add_overlay(self.position_dashboard)
-        self.overlay.add_overlay(self.satellites_dashboard)
+        self.overlay.add_overlay(self.satellites_radar_dashboard)
 
         if self.recorder_dashboard != None:
             self.overlay.add_overlay(self.recorder_dashboard)
@@ -189,15 +189,15 @@ class ShumateMapPanel(Panel):
     def update(self, position_info, satellites_info):
         if self.get_visible():
             self.position_dashboard.update(position_info)
-            self.satellites_dashboard.update(satellites_info)
+            self.satellites_radar_dashboard.update(satellites_info)
 
             if (
                 position_info["data"]["latitude"]["decimal"] != 0.0
                 and position_info["data"]["longitude"]["decimal"] != 0.0
             ):
-                if self.hint_shown == True:
+                if self.is_valid_location == True:
                     self.overlay.remove_overlay(self.hint)
-                    self.hint_shown = False
+                    self.is_valid_location = False
 
                 self.last_latitude = position_info["data"]["latitude"]["decimal"]
                 self.last_longitude = position_info["data"]["longitude"]["decimal"]
@@ -205,8 +205,8 @@ class ShumateMapPanel(Panel):
                 self.go_to_location(self.last_latitude, self.last_longitude)
 
             else:
-                if self.hint_shown == False:
+                if self.is_valid_location == False:
                     self.overlay.add_overlay(self.hint)
-                    self.hint_shown = True
+                    self.is_valid_location = True
 
             self.last_map_update = time.time()

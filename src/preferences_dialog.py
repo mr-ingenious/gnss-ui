@@ -7,14 +7,18 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
 
+
 class PreferencesDialog(Gtk.Window):
 
-    def __init__(self):
+    def __init__(self, config_provider):
         super().__init__()
+
+        self.config = config_provider
+
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
 
-        self.set_default_size(700, 400)
+        self.set_default_size(800, 500)
         self.set_css_classes(["preferences_dialog"])
         self.set_modal(True)
 
@@ -117,7 +121,7 @@ class PreferencesDialog(Gtk.Window):
         self.logger.debug(
             "hostname: %s", self.prefs_gpsd_host_input.get_buffer().get_text()
         )
-        
+
         self.logger.debug(
             "port: %s", self.prefs_gpsd_port_input.get_buffer().get_text()
         )
