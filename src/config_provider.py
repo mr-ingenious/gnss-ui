@@ -58,7 +58,7 @@ class ConfigProvider:
         if not config_str == None and len(config_str) > 0:
             try:
                 self.config = json.loads(config_str)
-                self.logger.debug("read config file successful")
+                self.logger.debug("reading config file successful")
             except json.JSONDecodeError as err:
                 self.logger.warn("reading JSON from config file failed: %s", repr(err))
                 self.__create_initial_config()
@@ -73,7 +73,7 @@ class ConfigProvider:
 
             self.logger.debug("config: '%s'", os.path.abspath(self.config_filename))
             jsonfile.write(json.dumps(self.config, ensure_ascii=False, indent=4))
-            self.logger.debug("Write successful")
+            self.logger.debug("Writing file successful")
             jsonfile.close()
 
     def __create_initial_config(self):

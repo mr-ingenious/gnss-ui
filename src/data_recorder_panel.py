@@ -9,7 +9,7 @@ import time
 
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio, GLib
 
 from data_recorder import DataRecorder, DataRecorderStatus
 from data_transformer import DataTransformer
@@ -18,10 +18,12 @@ from datetime import datetime
 
 
 class DataRecorderPanel(Panel):
-    def __init__(self, recorder, export_directory="./"):
+    def __init__(self, recorder, main_window, export_directory="./"):
         super().__init__()
 
+        self.parent_window = main_window
         self.selected_recording = None
+        self.dialog = None
         self.recorder = recorder
         self.export_directory = export_directory
 
@@ -178,17 +180,17 @@ class DataRecorderPanel(Panel):
         self.recording_details_info_box.append(self.recordings_details)
 
         # reset button
-        self.reset_rec_button = Gtk.Button(label="reset")
-        self.reset_rec_button.connect(
+        self.delete_rec_button = Gtk.Button(label="reset")
+        self.delete_rec_button.connect(
             "clicked", self.on_delete_recording_button_pressed
         )
 
-        self.reset_rec_button.set_child(self.reset_button_icon)
-        self.reset_rec_button.set_css_classes(
+        self.delete_rec_button.set_child(self.reset_button_icon)
+        self.delete_rec_button.set_css_classes(
             ["recording_button", "recording_button:active", "recording_button:hover"]
         )
-        self.reset_rec_button.set_tooltip_text("delete recording")
-        self.recording_details_controls_box.append(self.reset_rec_button)
+        self.delete_rec_button.set_tooltip_text("delete recording")
+        self.recording_details_controls_box.append(self.delete_rec_button)
 
         # export button
         self.export_rec_button = Gtk.Button(label="export")
@@ -251,14 +253,36 @@ class DataRecorderPanel(Panel):
 
     def on_delete_recording_button_pressed(self, button):
         self.logger.debug("[delete recording]")
-        if self.selected_recording != None:
-            self.recordings_details.set_label(
-                "\nDeleted recording\n" + self.selected_recording["name"] + "\n"
-            )
-            self.recorder.delete_recording_by_id(int(self.selected_recording["id"]))
-            self.recording_details_controls_box.set_visible(False)
-            self.selected_recording = None
-            self.update_recordings_table()
+
+        self.dialog = Gtk.AlertDialog()
+        self.dialog.set_buttons(["Delete", "Cancel"])
+        self.dialog.set_detail(
+            "Do you want to delete recording " + self.selected_recording["name"] + "?"
+        )
+
+        self.dialog.set_modal(False)
+        self.dialog.choose(
+            parent=self.parent_window,
+            callback=self.on_delete_recording_confirmed,
+            user_data=self.selected_recording["name"],
+        )
+
+    def on_delete_recording_confirmed(self, source_object, result, user_data):
+        choice = source_object.choose_finish(result)
+
+        if choice == 0:
+            self.logger.debug("delete recording confirmed: %s", repr(user_data))
+
+            if self.selected_recording != None:
+                self.recordings_details.set_label(
+                    "\nDeleted recording\n" + self.selected_recording["name"] + "\n"
+                )
+                self.recorder.delete_recording_by_id(int(self.selected_recording["id"]))
+                self.recording_details_controls_box.set_visible(False)
+                self.selected_recording = None
+                self.update_recordings_table()
+        else:
+            self.logger.debug("delete recording cancelled.")
 
     def on_export_recording_button_pressed(self, button):
         self.logger.debug("[export recording]")

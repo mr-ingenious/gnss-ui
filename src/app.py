@@ -45,7 +45,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.4.1"
 
 
 class PanelRefresher(threading.Thread):
@@ -166,6 +166,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.recorder_panel = DataRecorderPanel(
             recorder=self.recorder,
+            main_window=self,
             export_directory=self.config.get_param("recording/export/directory", "./"),
         )
 
