@@ -106,7 +106,7 @@ class SatellitesInfoPanel(Panel):
 
         return satellite_box
 
-    def update_row(self, sat):
+    def update_row(self, sat, remove_only=False):
         sat_name = sat["system"] + "-" + sat["prn"]
 
         for row_idx in range(0, 65):
@@ -115,7 +115,9 @@ class SatellitesInfoPanel(Panel):
                 if row_item.get_first_child().get_name() == sat_name:
                     # self.logger.info("sat list: update: %s (row %i)", sat_name, row_idx)
                     self.satellites_list.remove(row_item)
-                    self.satellites_list.insert(self.build_list_item(sat), row_idx)
+
+                    if not remove_only:
+                        self.satellites_list.insert(self.build_list_item(sat), row_idx)
                     break
             else:
                 self.logger.warn("sat list: updating %s failed - not found!", sat_name)
@@ -162,6 +164,7 @@ class SatellitesInfoPanel(Panel):
             for k in list(self.satellites_shown.keys()):
                 if sat_info["data"].get(k) == None:
                     self.logger.info("sat list: remove %s", k)
+                    self.update_row(self.satellites_shown.get(k), True)
                     self.satellites_shown.pop(k)
 
             self.last_update = time.time()
