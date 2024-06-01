@@ -40,15 +40,9 @@ class GpsdParser:
 
         if len(self.data) > 4000:
             self.logger.warning("parsing: HANDBRAKE !!!!")
-            # print("============================================================")
-            # print("============================================================")
-            # print("============================================================")
             print("============================================================")
             self.logger.debug(self.data)
             print("============================================================")
-            # print("============================================================")
-            # print("============================================================")
-            # print("============================================================")
             self.data = ""
             return
 
@@ -282,8 +276,8 @@ class GpsdParser:
         msg["latitude_dir"] = payload[4]
         msg["longitude"] = payload[5]
         msg["longitude_dir"] = payload[6]
-        msg["speed"] = payload[7]
-        msg["track_deg"] = payload[8]
+        msg["sog_kts"] = payload[7]  # speed over ground
+        msg["cog_deg"] = payload[8]  # course over ground, degrees, true north
         msg["date"] = payload[9]
         msg["magvar_deg"] = payload[10]
         msg["e_w"] = payload[11]
@@ -371,11 +365,21 @@ class GpsdParser:
 
         msg["time_utc"] = payload[1]
         msg["latitude"] = payload[2]
-        msg["latitude_dir"] = payload[3]
+        msg["latitude_dir"] = payload[3]  # N/S
         msg["longitude"] = payload[4]
-        msg["longitude_dir"] = payload[5]
+        msg["longitude_dir"] = payload[5]  # E/W
         msg["gps_quality"] = payload[6]
-        msg["satellites_in_view"] = payload[7]
+        # GPS quality:
+        # 0 = Fix not available or invalid,
+        # 1 = GPS SPS Mode, fix valid,
+        # 2 = Differential GPS, SPS Mode, fix valid,
+        # 3 = GPS PPS Mode, fix valid,
+        # 4 = Real Time Kinematic. System used in RTK mode with fixed integers,
+        # 5 = Float RTK. Satellite system used in RTK mode, floating integers,
+        # 6 = Estimated (dead reckoning) Mode,
+        # 7 = Manual Input Mode,
+        # 8 = Simulator Mode
+        msg["satellites_in_use"] = payload[7]
         msg["hdop"] = payload[8]
         msg["antenna_asl"] = payload[9]
         msg["antenna_asl_unit_meters"] = payload[10]
@@ -390,13 +394,15 @@ class GpsdParser:
             self.logger.debug("malformed nmea string: '%s'", payload)
             return
 
-        msg["track_deg"] = payload[1]
+        msg["cog_deg_true"] = payload[1]  # course over ground, degrees true
         msg["true_north"] = payload[2]
-        msg["track_mag"] = payload[3]
-        msg["track_mag_relative_north"] = payload[4]
-        msg["speed_knots"] = payload[5]
-        msg["unit_knots"] = payload[6]
-        msg["speed_kph"] = payload[7]
-        msg["unit_kph"] = payload[8]
-        msg["mode"] = payload[9]
+        msg["cog_mag"] = payload[3]  # course over ground, degrees magnetic
+        msg["cog_mag_relative_north"] = payload[4]
+        msg["sog_kts"] = payload[5]  # speed over ground, knots
+        msg["unit_kts"] = payload[6]  # N
+        msg["sog_kph"] = payload[7]  # speed over ground, kph
+        msg["unit_kph"] = payload[8]  # K
+        msg["mode"] = payload[
+            9
+        ]  # a: autonomous, d: differential, e: estimated, m: manual, s: simulator, n: invalid data
         msg["valid"] = True

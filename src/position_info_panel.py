@@ -44,15 +44,15 @@ class PositionInfoPanel(Panel):
 
         self.__add_to_grid("latitude", "Latitude:", 1)
         self.__add_to_grid("longitude", "Longitude:", 2)
-        self.__add_to_grid("altitude", "Altitude:", 3)
+        self.__add_to_grid("altitude", "Altitude [m]:", 3)
 
-        self.__add_to_grid("track", "Track:", 4)
-        self.__add_to_grid("track_magvar", "Track mag. var.", 5)
+        self.__add_to_grid("cog", "COG [°]:", 4)
+        self.__add_to_grid("mag_var", "Magn. var. [°]", 5)
 
-        self.__add_to_grid("speed_kph", "Speed (kph):", 6)
+        self.__add_to_grid("sog_kph", "SOG [kph]:", 6)
 
         if not self.is_dashboard:
-            self.__add_to_grid("speed_kts", "Speed (kts):", 7)
+            self.__add_to_grid("sog_kts", "SOG [kts]:", 7)
 
         self.__add_to_grid("status", "Status:", 8)
         self.__add_to_grid("gps_quality", "GPS quality:", 9)
@@ -109,21 +109,19 @@ class PositionInfoPanel(Panel):
                 + position_info["data"]["longitude"]["direction"],
             )
 
-            self.__change_value("track", str(position_info["data"]["heading"]["track"]))
+            self.__change_value("cog", str(position_info["data"]["cog"]["cog_deg"]))
             self.__change_value(
-                "track_magvar", str(position_info["data"]["heading"]["mag_var"])
+                "mag_var", str(position_info["data"]["cog"]["magvar_deg"])
             )
 
             self.__change_value("hdop", str(position_info["data"]["dop"]["hdop"]))
             self.__change_value("pdop", str(position_info["data"]["dop"]["pdop"]))
             self.__change_value("vdop", str(position_info["data"]["dop"]["vdop"]))
             self.__change_value("altitude", str(position_info["data"]["altitude"]))
-            self.__change_value("speed_kph", str(position_info["data"]["speed"]["kph"]))
+            self.__change_value("sog_kph", str(position_info["data"]["sog"]["kph"]))
 
             if not self.is_dashboard:
-                self.__change_value(
-                    "speed_kts", str(position_info["data"]["speed"]["knots"])
-                )
+                self.__change_value("sog_kts", str(position_info["data"]["sog"]["kts"]))
             self.__change_value("status", str(position_info["data"]["status"]))
             self.__change_value(
                 "gps_quality", str(position_info["data"]["gps_quality"]["description"])

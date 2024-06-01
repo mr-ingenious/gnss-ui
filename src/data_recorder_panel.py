@@ -257,10 +257,10 @@ class DataRecorderPanel(Panel):
         self.dialog = Gtk.AlertDialog()
         self.dialog.set_buttons(["Delete", "Cancel"])
         self.dialog.set_detail(
-            "Do you want to delete recording " + self.selected_recording["name"] + "?"
+            "Do you want to delete recording '" + self.selected_recording["name"] + "'?"
         )
 
-        self.dialog.set_modal(False)
+        self.dialog.set_modal(True)
         self.dialog.choose(
             parent=self.parent_window,
             callback=self.on_delete_recording_confirmed,
@@ -282,7 +282,7 @@ class DataRecorderPanel(Panel):
                 self.selected_recording = None
                 self.update_recordings_table()
         else:
-            self.logger.debug("delete recording cancelled.")
+            self.logger.debug("delete recording canceled.")
 
     def on_export_recording_button_pressed(self, button):
         self.logger.debug("[export recording]")

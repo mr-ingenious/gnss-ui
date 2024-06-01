@@ -46,9 +46,10 @@ class DataRecorder:
             if self.current_recording == None:
                 now = datetime.now()
                 date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+                name_date_time = now.strftime("%Y%m%dT%H%M%S")
 
                 self.current_recording = RecordingInfo
-                self.current_recording.name = "Recording_" + str(time.time())
+                self.current_recording.name = "Recording_" + name_date_time
                 self.current_recording.description = "Recording from " + date_time
                 self.current_recording.ts_start = time.time()
                 self.current_recording.ts_end = 0
@@ -317,7 +318,7 @@ class DataRecorder:
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
         return cursor.fetchone()[0]
-    
+
     def get_satellite_data_count(self):
         sql = """ SELECT count(*) FROM satellite_records"""
 

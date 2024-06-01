@@ -30,11 +30,12 @@ class DataModel:
                 "decimal": 0.0,
                 "direction": "",
             },
-            "heading": {"track": "", "mag_var": ""},
+            "cog": {"cog_deg": 0.0, "magvar_deg": 0.0},
             "gps_quality": {"indicator": 0, "description": ""},
             "altitude": 0.0,
             "geoid_separation": 0.0,
-            "speed": {"knots": 0.0, "kph": 0.0},
+            "sog": {"kts": 0.0, "kph": 0.0},
+            "satellites_in_use": 0,
             "status": "",
         }
 
@@ -45,6 +46,10 @@ class DataModel:
         self.satellites = dict()
         self.satellites["update_ts"] = 0
         self.satellites["data"] = dict()
+
+        self.other = dict()
+        self.other["update_ts"] = 0
+        self.other["data"] = dict()
 
         self.last_values_update = 0
 
@@ -92,9 +97,11 @@ class DataModel:
                 )
 
             if msg["status"] == "A":
-                status = "active"
+                status = "Valid"
+            elif msg["status"] == "V":
+                status = "Receiver warning"
             else:
-                status = "void"
+                status = "Unknown"
 
             self.position["data"]["latitude"] = {
                 "string": msg["latitude"],
@@ -109,9 +116,17 @@ class DataModel:
             }
 
             self.position["data"]["status"] = status
-            self.position["data"]["heading"] = {
-                "track": msg["track_deg"],
-                "mag_var": msg["magvar_deg"],
+
+            cog_deg = 0.0
+            if msg["cog_deg"] != "":
+                cog_deg = float(msg["cog_deg"])
+
+            magvar_deg = 0.0
+            if msg["magvar_deg"] != "":
+                magvar_deg = float(msg["magvar_deg"])
+            self.position["data"]["cog"] = {
+                "cog_deg": cog_deg,
+                "magvar_deg": magvar_deg,
             }
 
             self.position["update_ts"] = time.time()
@@ -176,7 +191,7 @@ class DataModel:
                     pass
 
         elif msg["type"] == "GSA":
-            # self.logger.debug("GSA: " + repr(msg))
+            self.logger.debug("GSA: " + repr(msg))
 
             if msg["talker"] == "GN":
                 return
@@ -247,13 +262,23 @@ class DataModel:
 
             gq = "unknown"
             if gqr == 0:
-                gq = "Fix not valid"
+                gq = "Invalid / unavail."
             elif gqr == 1:
-                gq = "GPS Fix"
+                gq = "GPS (SPS)"
             elif gqr == 2:
-                gq = "Differential GPS"
-            else:
-                gq = "unknown"
+                gq = "Diff. GPS (SPS)"
+            elif gqr == 3:
+                gq = "GPS (PPS)"
+            elif gqr == 4:
+                gq = "RTK fixed int."
+            elif gqr == 5:
+                gq = "RTK, float int."
+            elif gqr == 6:
+                gq = "Estimated (DR)"
+            elif gqr == 7:
+                gq = "Manual Input"
+            elif gqr == 8:
+                gq = "Simulator"
 
             self.position["data"]["gps_quality"] = {"indicator": gqr, "description": gq}
 
@@ -265,6 +290,11 @@ class DataModel:
             if msg["geosep"] != "":
                 geosep = float(msg["geosep"])
 
+            if msg["satellites_in_use"] != "":
+                self.position["data"]["satellites_in_use"] = int(
+                    msg["satellites_in_use"]
+                )
+
             self.position["data"]["altitude"] = altitude
             self.position["data"]["geoid_separation"] = geosep
 
@@ -273,20 +303,18 @@ class DataModel:
         elif msg["type"] == "VTG":
             # self.logger.debug("VTG: " + repr(msg))
 
-            speed_knots = 0.0
-            if msg["speed_knots"] != "":
-                speed_knots = float(msg["speed_knots"])
+            sog_kts = 0.0
+            if msg["sog_kts"] != "":
+                sog_kts = float(msg["sog_kts"])
 
-            speed_kph = 0.0
-            if msg["speed_kph"] != "":
-                speed_kph = float(msg["speed_kph"])
-            self.position["data"].update(
-                {"speed": {"knots": speed_knots, "kph": speed_kph}}
-            )
+            sog_kph = 0.0
+            if msg["sog_kph"] != "":
+                sog_kph = float(msg["sog_kph"])
+            self.position["data"].update({"sog": {"kts": sog_kts, "kph": sog_kph}})
             self.position["update_ts"] = time.time()
 
         elif msg["type"] == "GNS":
-            # self.logger.debug("GNS: " + repr(msg))
+            # self.logger.debug("GNS: ignored " + repr(msg))
             pass
         else:
             self.logger.debug("Datamodel: unsupported nmea msg type: %s", msg["type"])
@@ -294,5 +322,5 @@ class DataModel:
         self.last_values_update = time.time()
 
     def updateJSON(self, jobject):
-        # print("DataModel: JSON update, object:", repr(jobject))
+        # self.logger.debug("DataModel: JSON update, object:", repr(jobject))
         pass

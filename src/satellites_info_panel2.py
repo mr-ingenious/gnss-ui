@@ -144,7 +144,7 @@ class SatellitesInfoPanel(Panel):
             for k in sorted(sat_info["data"].keys()):
                 # self.logger.info("--- satellite %s", k)
                 if k not in self.satellites_shown:
-                    self.logger.info("sat list: add %s", k)
+                    self.logger.debug("sat list: add %s", k)
 
                     self.satellites_list.append(
                         self.build_list_item(sat_info["data"].get(k))
@@ -163,7 +163,7 @@ class SatellitesInfoPanel(Panel):
 
             for k in list(self.satellites_shown.keys()):
                 if sat_info["data"].get(k) == None:
-                    self.logger.info("sat list: remove %s", k)
+                    self.logger.debug("sat list: remove %s", k)
                     self.update_row(self.satellites_shown.get(k), True)
                     self.satellites_shown.pop(k)
 
