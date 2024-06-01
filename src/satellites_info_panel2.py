@@ -136,11 +136,16 @@ class SatellitesInfoPanel(Panel):
         else:
             return False
 
-    def update(self, sat_info):
+    def update(self, position_info, sat_info):
         if self.get_visible() and time.time() - self.last_update > 1:
             self.satellites_summary.set_label(
-                "# Satellites: " + str(len(sat_info["data"].keys()))
+                "# Satellites: "
+                + str(len(sat_info["data"].keys()))
+                + " (in use:"
+                + str(position_info["data"]["satellites_in_use"])
+                + ")"
             )
+
             for k in sorted(sat_info["data"].keys()):
                 # self.logger.info("--- satellite %s", k)
                 if k not in self.satellites_shown:

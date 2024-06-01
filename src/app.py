@@ -45,7 +45,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.5.1"
 
 
 class PanelRefresher(threading.Thread):
@@ -232,7 +232,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def update_panels_internal(self):
         self.position_info_panel.update(self.data.position)
-        self.satellites_info_panel.update(self.data.satellites)
+        self.satellites_info_panel.update(self.data.position, self.data.satellites)
         self.satellites_radar_panel.update(self.data.satellites)
         self.map_panel.update(self.data.position, self.data.satellites)
         self.recorder_panel.update()

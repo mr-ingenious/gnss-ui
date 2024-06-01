@@ -294,7 +294,7 @@ class GpsdParser:
         msg["longitude"] = payload[4]
         msg["longitude_dir"] = payload[5]
         msg["mode"] = payload[6]
-        msg["satellites_in_view"] = payload[7]
+        msg["satellites_in_use"] = payload[7]
         msg["hdop"] = payload[8]
         msg["ortho_height_meters"] = payload[9]
         msg["age_diff_data"] = payload[10]

@@ -124,6 +124,7 @@ class DataModel:
             magvar_deg = 0.0
             if msg["magvar_deg"] != "":
                 magvar_deg = float(msg["magvar_deg"])
+
             self.position["data"]["cog"] = {
                 "cog_deg": cog_deg,
                 "magvar_deg": magvar_deg,
@@ -286,17 +287,19 @@ class DataModel:
             if msg["antenna_asl"] != "":
                 altitude = float(msg["antenna_asl"])
 
+            self.position["data"]["altitude"] = altitude
+
             geosep = 0.0
             if msg["geosep"] != "":
                 geosep = float(msg["geosep"])
 
-            if msg["satellites_in_use"] != "":
-                self.position["data"]["satellites_in_use"] = int(
-                    msg["satellites_in_use"]
-                )
-
-            self.position["data"]["altitude"] = altitude
             self.position["data"]["geoid_separation"] = geosep
+
+            sat_in_use = 0
+            if msg["satellites_in_use"] != "":
+                sat_in_use = int(msg["satellites_in_use"])
+
+            self.position["data"]["satellites_in_use"] = sat_in_use
 
             self.position["update_ts"] = time.time()
 
@@ -310,6 +313,7 @@ class DataModel:
             sog_kph = 0.0
             if msg["sog_kph"] != "":
                 sog_kph = float(msg["sog_kph"])
+
             self.position["data"].update({"sog": {"kts": sog_kts, "kph": sog_kph}})
             self.position["update_ts"] = time.time()
 
