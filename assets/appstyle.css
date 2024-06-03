@@ -123,7 +123,7 @@
 
 .satellites_info_panel {
     background-color: rgba(135, 206, 250, 0.7);
-    min-width: 350px;
+    min-width: 340px;
 }
 
 .satellites_info_label {
@@ -137,7 +137,7 @@
     color: black;
     border: 0px solid darkgray;
     background-color: rgba(255, 255, 255, 0);
-    min-width: 35px;
+    min-width: 40px;
 
     padding-top: 1px;
     padding-bottom: 1px;
@@ -261,12 +261,13 @@
 }
 
 .recording_button {
-    /*background-color: rgba(0, 0, 0, 0.65);*/
+    background-color: rgba(0, 0, 0, 0.65);
     border-radius: 5px;
     border: 1px solid #000000;
     margin: 5px;
-    padding: 11px;
+    padding: 5px;
     color: white;
+    min-width: 30px;
 }
 
 .recording_button:active {
@@ -274,7 +275,7 @@
     border-radius: 5px;
     /* border: 1px solid #000000; */
     margin: 5px;
-    padding: 11px;
+    padding: 5px;
     color: black;
 }
 
@@ -283,8 +284,9 @@
     border-radius: 5px;
     /* border: 1px solid #000000; */
     margin: 5px;
-    padding: 11px;
+    padding: 5px;
     color: white;
+
 }
 
 

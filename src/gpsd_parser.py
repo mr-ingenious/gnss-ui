@@ -243,6 +243,7 @@ class GpsdParser:
         msg["talker"] = payload[0][1:3]
         msg["type"] = payload[0][3:]
         msg["checksum"] = fields[1]
+        msg["payload_raw"] = fields[0]
         msg["valid"] = False
 
         if msg["type"] == "RMC":
@@ -285,7 +286,7 @@ class GpsdParser:
 
     def __parse_nmea_gns(self, msg, payload):
         if len(payload) < 13:
-            self.logger.debug("malformed nmea string: '%s'", payload)
+            self.logger.warn("malformed nmea string: '%s'", payload)
             return
 
         msg["time_utc"] = payload[1]
@@ -304,7 +305,7 @@ class GpsdParser:
 
     def __parse_nmea_gsa(self, msg, payload):
         if len(payload) < 18:
-            self.logger.debug("malformed nmea string: '%s'", payload)
+            self.logger.warn("malformed nmea string: '%s'", payload)
             return
 
         msg["smode"] = payload[1]
@@ -332,7 +333,7 @@ class GpsdParser:
 
     def __parse_nmea_gsv(self, msg, payload):
         if len(payload) < 8:  # TODO: check correct condition
-            self.logger.debug("malformed nmea string: '%s'", payload)
+            self.logger.warn("malformed nmea string: '%s'", payload)
             return
 
         msg["num_msg"] = payload[1]
@@ -360,7 +361,7 @@ class GpsdParser:
 
     def __parse_nmea_gga(self, msg, payload):
         if len(payload) < 15:
-            self.logger.debug("malformed nmea string: '%s'", payload)
+            self.logger.warn("malformed nmea string: '%s'", payload)
             return
 
         msg["time_utc"] = payload[1]
@@ -391,7 +392,7 @@ class GpsdParser:
 
     def __parse_nmea_vtg(self, msg, payload):
         if len(payload) < 10:
-            self.logger.debug("malformed nmea string: '%s'", payload)
+            self.logger.warn("malformed nmea string: '%s'", payload)
             return
 
         msg["cog_deg_true"] = payload[1]  # course over ground, degrees true

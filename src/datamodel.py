@@ -84,6 +84,9 @@ class DataModel:
     def updateNMEA(self, msg):
         # self.logger.debug("DataModel: NMEA update, msg: %s", msg["type"])
         if msg["type"] == "RMC":
+            if msg["talker"] == "GN":
+                self.logger.debug("RMC: talker GN: " + repr(msg))
+
             lat_dec = 0.0
             lon_dec = 0.0
 
@@ -143,74 +146,92 @@ class DataModel:
         elif msg["type"] == "GSV":
             # self.logger.debug("GSV: " + repr(msg))
 
+            if msg["talker"] == "GN":
+                self.logger.debug("GSV: talker GN: " + repr(msg))
+
             for i in range(1, 5):
                 try:
-                    if msg["sat_" + str(i) + "_num"] != "":
+                    if msg.get("sat_" + str(i) + "_num") != None:
                         name = msg["talker"] + "-" + msg["sat_" + str(i) + "_num"]
 
                         if None == self.satellites["data"].get(name):
-                            self.logger.debug("creating new sat entry for %s", name)
+                            self.logger.debug(
+                                "GSV: creating new sat entry for %s", name
+                            )
+                            self.logger.debug("GSV: msg: %s", msg)
+
                             self.satellites["data"][name] = {
-                                "prn": "",
+                                "prn": msg["sat_" + str(i) + "_num"],
                                 "system": "",
-                                "elevation": -1,
-                                "azimuth": -1,
-                                "snr": -1,
-                                "update_ts": 0,
+                                "elevation": -1.0,
+                                "azimuth": -1.0,
+                                "snr": -1.0,
+                                "update_ts": time.time(),
                                 "used": False,
-                                "last_used_ts": time.time(),
+                                "last_used_ts": 0.0,
                             }
 
-                        el = -1
-                        az = -1
-                        snr = -1
+                        el = -1.0
+                        az = -1.0
+                        snr = -1.0
+
                         if msg["sat_" + str(i) + "_elevation_deg"] != "":
-                            el = int(msg["sat_" + str(i) + "_elevation_deg"])
+                            el = float(msg["sat_" + str(i) + "_elevation_deg"])
                         if msg["sat_" + str(i) + "_azimuth_deg"] != "":
-                            az = int(msg["sat_" + str(i) + "_azimuth_deg"])
+                            az = float(msg["sat_" + str(i) + "_azimuth_deg"])
                         if msg["sat_" + str(i) + "_snr_db"] != "":
-                            snr = int(msg["sat_" + str(i) + "_snr_db"])
+                            snr = float(msg["sat_" + str(i) + "_snr_db"])
 
-                        self.satellites["data"].update(
-                            {
-                                name: {
-                                    "prn": msg["sat_" + str(i) + "_num"],
-                                    "system": msg["talker"],
-                                    "elevation": el,
-                                    "azimuth": az,
-                                    "snr": snr,
-                                    "update_ts": time.time(),
-                                    "used": self.satellites["data"][name]["used"],
-                                    "last_used_ts": self.satellites["data"][name][
-                                        "last_used_ts"
-                                    ],
-                                }
-                            }
-                        )
-                except:
-                    # satellite ID not found ...
+                        self.satellites["data"][name] = {
+                            "prn": msg["sat_" + str(i) + "_num"],
+                            "system": msg["talker"],
+                            "elevation": el,
+                            "azimuth": az,
+                            "snr": snr,
+                            "update_ts": time.time(),
+                            "used": self.satellites["data"][name]["used"],
+                            "last_used_ts": self.satellites["data"][name][
+                                "last_used_ts"
+                            ],
+                        }
+
+                except Exception as e:
+                    # maybe satellite ID not found ...
+                    self.logger.warn("GSV: Exception; %s", str(e))
                     pass
 
         elif msg["type"] == "GSA":
-            self.logger.debug("GSA: " + repr(msg))
+            # self.logger.debug("GSA: " + repr(msg))
 
             if msg["talker"] == "GN":
-                return
+                if msg["system_id"] == "1":
+                    self.logger.debug("GSA: GN -> setting talker to GP")
+                    msg["talker"] = "GP"
+                elif msg["system_id"] == "2":
+                    self.logger.debug("GSA: GN -> setting talker to GL")
+                    msg["talker"] = "GL"
+                elif msg["system_id"] == "3":
+                    self.logger.debug("GSA: GN -> setting talker to GA")
+                    msg["talker"] = "GA"
+                else:
+                    # self.logger.debug("GSA: ignoring GN talker, system ID unknown")
+                    # self.logger.debug("GSA: " + repr(msg))
+                    return
 
             for i in range(1, 13):
                 if msg["id_" + str(i)] != "":
                     name = msg["talker"] + "-" + msg["id_" + str(i)]
-                    self.logger.debug("GSA info for %s", name)
+                    # self.logger.debug("GSA info for %s", name)
 
                     if None == self.satellites["data"].get(name):
-                        self.logger.debug("creating new sat entry for %s", name)
+                        self.logger.debug("GSA: creating new sat entry for %s", name)
                         self.satellites["data"][name] = {
                             "prn": msg["id_" + str(i)],
                             "system": msg["talker"],
-                            "elevation": -1,
-                            "azimuth": -1,
-                            "snr": -1,
-                            "update_ts": 0,
+                            "elevation": -1.0,
+                            "azimuth": -1.0,
+                            "snr": -1.0,
+                            "update_ts": 0.0,
                             "used": True,
                             "last_used_ts": time.time(),
                         }
@@ -245,15 +266,16 @@ class DataModel:
                 # self.logger.debug("--- %s", k)
                 if k != "update_ts":
                     if (time.time() - self.satellites["data"].get(k)["update_ts"]) > 5:
-                        self.logger.debug("sat %s: data too old, removing.", k)
+                        self.logger.debug("GSA: %s - data too old, removing.", k)
                         self.satellites["data"].pop(k)
                     elif (
                         time.time() - self.satellites["data"].get(k)["last_used_ts"]
                         > 10
                     ):
-                        # self.logger.debug(
-                        #    "sat %s: last_used_ts too old, setting 'used' to 'false'.", k
-                        # )
+                        #self.logger.debug(
+                        #    "GSA: %s - last_used_ts too old, setting 'used' to 'false'.",
+                        #    k,
+                        #)
                         self.satellites["data"].get(k)["used"] = False
                         self.satellites["data"].get(k)["last_used_ts"] = time.time()
 

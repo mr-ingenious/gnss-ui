@@ -69,11 +69,11 @@ class SatellitesInfoPanel(Panel):
         el_text = str(sat["elevation"]) + "°"
         az_text = str(sat["azimuth"]) + "°"
         snr_text = str(sat["snr"]) + "dB"
-        if el_text == "-1°" and az_text == "-1°":
+        if el_text == "-1.0°" and az_text == "-1.0°":
             el_text = "-"
             az_text = "-"
 
-        if snr_text == "-1dB":
+        if snr_text == "-1.0dB":
             snr_text = "-"
 
         prn_label = Gtk.Label(label=satellite_name)
@@ -113,7 +113,7 @@ class SatellitesInfoPanel(Panel):
             row_item = self.satellites_list.get_row_at_index(row_idx)
             if row_item != None:
                 if row_item.get_first_child().get_name() == sat_name:
-                    # self.logger.info("sat list: update: %s (row %i)", sat_name, row_idx)
+                    self.logger.debug("sat list: update: %s (row %i)", sat_name, row_idx)
                     self.satellites_list.remove(row_item)
 
                     if not remove_only:
@@ -147,10 +147,12 @@ class SatellitesInfoPanel(Panel):
             )
 
             for k in sorted(sat_info["data"].keys()):
-                # self.logger.info("--- satellite %s", k)
+                # self.logger.debug("--- satellite %s", k)
+                
                 if k not in self.satellites_shown:
                     self.logger.debug("sat list: add %s", k)
-
+                    # self.logger.debug("sat list: %s", repr(sat_info))
+                    
                     self.satellites_list.append(
                         self.build_list_item(sat_info["data"].get(k))
                     )

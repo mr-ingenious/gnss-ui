@@ -45,7 +45,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.5.1"
+APP_VERSION = "0.5.2"
 
 
 class PanelRefresher(threading.Thread):
@@ -133,7 +133,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.main_box.append(self.satellites_info_panel)
 
         self.satellites_radar_panel = SatellitesGraphicPanel()
-        if "satellites_graphic" in self.config.get_param("startup/panels_shown"):
+        if "satellites_radar" in self.config.get_param("startup/panels_shown"):
             self.satellites_radar_panel.set_visible(True)
         else:
             self.satellites_radar_panel.set_visible(False)
