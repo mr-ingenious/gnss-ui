@@ -188,7 +188,7 @@ class DataRecorder:
             position["data"]["latitude"]["decimal"],
             position["data"]["longitude"]["decimal"],
             position["data"]["altitude"],
-            position["data"]["speed"]["kph"],
+            position["data"]["sog"]["kph"],
             position["data"]["dop"]["hdop"],
             position["data"]["dop"]["pdop"],
             position["data"]["dop"]["vdop"],
