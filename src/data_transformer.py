@@ -47,6 +47,12 @@ class DataTransformer:
             ts_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
             et.SubElement(trkpt, "time").text = ts_str
             et.SubElement(trkpt, "ele").text = str(data[i][3])
+            #et.SubElement(trkpt, "sat").text = str(data[i][3])  ## TODO
+            #et.SubElement(trkpt, "geoidheight").text = str(data[i][3])  ## TODO
+            #et.SubElement(trkpt, "magvar").text = str(data[i][3])  ## TODO
+            #et.SubElement(trkpt, "fix").text = str(data[i][3])  ## TODO
+            #et.SubElement(trkpt, "ageofdgpsdata").text = str(data[i][3])  ## TODO
+
             et.SubElement(trkpt, "hdop").text = str(data[i][5])
             et.SubElement(trkpt, "pdop").text = str(data[i][6])
             et.SubElement(trkpt, "vdop").text = str(data[i][7])
