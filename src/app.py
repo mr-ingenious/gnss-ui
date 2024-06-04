@@ -210,12 +210,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self.logger.debug("App: close-request")
 
         if self.recorder.get_status() != DataRecorderStatus.RECORDING_IDLE:
+            self.logger.info("App: recording is still in progress, closing aborted.")
             self.dialog = Gtk.AlertDialog()
             self.dialog.set_detail("Recording still in progress!")
             self.dialog.set_modal(True)
             self.dialog.show(self)
             return True  # True: abort closing the main window
 
+        self.logger.info("App: exiting")
         self.handle_exit()
         return False
 
