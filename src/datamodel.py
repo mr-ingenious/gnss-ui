@@ -154,6 +154,12 @@ class DataModel:
                     if msg.get("sat_" + str(i) + "_num") != None:
                         name = msg["talker"] + "-" + msg["sat_" + str(i) + "_num"]
 
+                        if msg["sat_" + str(i) + "_num"] == "":
+                            self.logger.debug(
+                                "GSV: got sat data without PRN, skipping."
+                            )
+                            continue
+
                         if None == self.satellites["data"].get(name):
                             self.logger.debug(
                                 "GSV: creating new sat entry for %s", name
@@ -272,10 +278,10 @@ class DataModel:
                         time.time() - self.satellites["data"].get(k)["last_used_ts"]
                         > 10
                     ):
-                        #self.logger.debug(
+                        # self.logger.debug(
                         #    "GSA: %s - last_used_ts too old, setting 'used' to 'false'.",
                         #    k,
-                        #)
+                        # )
                         self.satellites["data"].get(k)["used"] = False
                         self.satellites["data"].get(k)["last_used_ts"] = time.time()
 
