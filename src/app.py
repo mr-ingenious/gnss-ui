@@ -16,7 +16,7 @@ from satellites_graphic_panel import SatellitesGraphicPanel
 
 from preferences_dialog2 import PreferencesDialog
 
-from data_recorder import DataRecorder
+from data_recorder import DataRecorder, DataRecorderStatus
 
 from gpsd_panel import GpsdPanel
 
@@ -207,12 +207,23 @@ class MainWindow(Gtk.ApplicationWindow):
         self.connect("close-request", self.handle_close_request)
 
     def handle_close_request(self, data):
-        self.logger.debug("AW: close-request")
-        self.panels_update_thread.signalize_stop()
-        self.gpsdc.signalize_stop()
+        self.logger.debug("App: close-request")
+
+        if self.recorder.get_status() != DataRecorderStatus.RECORDING_IDLE:
+            self.dialog = Gtk.AlertDialog()
+            self.dialog.set_detail("Recording still in progress!")
+            self.dialog.set_modal(True)
+            self.dialog.show(self)
+            return True  # True: abort closing the main window
+
+        self.handle_exit()
+        return False
 
     def handle_exit(self):
-        self.logger.info("stopping gpsd client")
+        self.logger.info("stopping gpsd client and panels update thread")
+        self.panels_update_thread.signalize_stop()
+        self.panels_update_thread.join(5)
+
         self.gpsdc.signalize_stop()
         self.gpsdc.join(5)
 
