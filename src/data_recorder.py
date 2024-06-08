@@ -1,6 +1,9 @@
 #! /usr/bin/python3
 
 import logging
+import logging.config
+
+
 import time
 
 from enum import Enum
@@ -27,11 +30,12 @@ class RecordingInfo:
 
 
 class DataRecorder:
-    def __init__(self, capture_interval=1):
+    def __init__(self, capture_interval=1, db_file="gnss_ui.db"):
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("recorder")
 
         self.schema_version = "0.0.2"
+        self.db = db_file
 
         self.capture_interval = capture_interval
         self.last_record_ts = 0
@@ -113,7 +117,7 @@ class DataRecorder:
 
     def __init_db(self):
         self.logger.info("initialize db")
-        self.connection = sqlite3.connect("gnss_ui.db", check_same_thread=False)
+        self.connection = sqlite3.connect(self.db, check_same_thread=False)
         cursor = self.connection.cursor()
         try:
             cursor.execute("CREATE TABLE IF NOT EXISTS version (schema, ts)")
