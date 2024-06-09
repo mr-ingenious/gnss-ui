@@ -187,7 +187,7 @@ class DataRecorder:
         values = (
             position["data"]["latitude"]["decimal"],
             position["data"]["longitude"]["decimal"],
-            position["data"]["altitude"],
+            position["data"]["altitude"]["msl"],
             position["data"]["sog"]["kph"],
             position["data"]["dop"]["hdop"],
             position["data"]["dop"]["pdop"],

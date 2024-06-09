@@ -54,7 +54,7 @@ class SatellitesInfoPanel(Panel):
 
     def build_list_item(self, sat):
         satellite_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        satellite_name = sat["system"] + "-" + sat["prn"]
+        satellite_name = sat["system"] + "-" + sat["id"]
 
         satellite_icon = Gtk.Picture()
         if sat["used"]:
@@ -76,9 +76,9 @@ class SatellitesInfoPanel(Panel):
         if snr_text == "-1.0dB":
             snr_text = "-"
 
-        prn_label = Gtk.Label(label=satellite_name)
-        prn_label.set_css_classes(["satellites_info_satellite_name"])
-        satellite_box.append(prn_label)
+        satid_label = Gtk.Label(label=satellite_name)
+        satid_label.set_css_classes(["satellites_info_satellite_name"])
+        satellite_box.append(satid_label)
 
         elevation_label = Gtk.Label(label="EL")
         elevation_label.set_css_classes(["satellites_info_label"])
@@ -107,13 +107,15 @@ class SatellitesInfoPanel(Panel):
         return satellite_box
 
     def update_row(self, sat, remove_only=False):
-        sat_name = sat["system"] + "-" + sat["prn"]
+        sat_name = sat["system"] + "-" + sat["id"]
 
         for row_idx in range(0, 65):
             row_item = self.satellites_list.get_row_at_index(row_idx)
             if row_item != None:
                 if row_item.get_first_child().get_name() == sat_name:
-                    self.logger.debug("sat list: update: %s (row %i)", sat_name, row_idx)
+                    self.logger.debug(
+                        "sat list: update: %s (row %i)", sat_name, row_idx
+                    )
                     self.satellites_list.remove(row_item)
 
                     if not remove_only:
@@ -125,7 +127,7 @@ class SatellitesInfoPanel(Panel):
 
     def is_equal(self, sat1, sat2):
         if (
-            sat1["prn"] == sat2["prn"]
+            sat1["id"] == sat2["id"]
             and sat1["system"] == sat2["system"]
             and sat1["elevation"] == sat2["elevation"]
             and sat1["azimuth"] == sat2["azimuth"]
@@ -148,11 +150,11 @@ class SatellitesInfoPanel(Panel):
 
             for k in sorted(sat_info["data"].keys()):
                 # self.logger.debug("--- satellite %s", k)
-                
+
                 if k not in self.satellites_shown:
                     self.logger.debug("sat list: add %s", k)
                     # self.logger.debug("sat list: %s", repr(sat_info))
-                    
+
                     self.satellites_list.append(
                         self.build_list_item(sat_info["data"].get(k))
                     )
