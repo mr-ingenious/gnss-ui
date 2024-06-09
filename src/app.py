@@ -11,7 +11,7 @@ from gpsd_client import GpsdClient
 from observer import Observer
 
 from position_info_panel import PositionInfoPanel
-from satellites_info_panel2 import SatellitesInfoPanel
+from satellites_info_panel import SatellitesInfoPanel
 from satellites_graphic_panel import SatellitesGraphicPanel
 
 from preferences_dialog2 import PreferencesDialog
@@ -45,7 +45,8 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.6.0"
+APP_VERSION = "0.6.1"
+
 
 class PanelRefresher(threading.Thread):
     def __init__(self, target, cycle_sec=2):
