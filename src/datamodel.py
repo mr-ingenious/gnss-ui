@@ -52,13 +52,14 @@ class DataModel:
                     "epc": 0.0,
                     "epd": 0.0,
                     "ept": 0.0,
+                    "sep" : 0.0
                 },
             },
             "altitude": {"hae": 0.0, "msl": 0.0},
             "geoid_separation": 0.0,
             "sog": {"kts": 0.0, "kph": 0.0},
             "satellites_in_use": 0,
-            "status": "",
+            "status": "unknown",
         }
 
         self.time = dict()
@@ -281,9 +282,9 @@ class DataModel:
             if msg["vdop"] != "":
                 vdop = float(msg["vdop"])
 
-            self.position["data"].update(
-                {"dop": {"hdop": hdop, "vdop": vdop, "pdop": pdop}}
-            )
+            self.position["data"]["dop"]["hdop"] = hdop
+            self.position["data"]["dop"]["vdop"] = vdop
+            self.position["data"]["dop"]["pdop"] = pdop
 
             self.position["update_ts"] = time.time()
 
@@ -492,17 +493,21 @@ class DataModel:
                     jobject, "ecefvz"
                 )
 
-                gqr = self.__get_int_val(jobject, "mode", defval=0)
+                gqr = self.__get_int_val(jobject, "mode", defval = 0)
                 self.position["data"]["gps_quality"]["indicator"] = gqr
                 
                 if gqr == 0:
                     self.position["data"]["gps_quality"]["description"] = "unknown"
+                    self.position["data"]["status"]  ="unknown"
                 elif gqr == 1:
                     self.position["data"]["gps_quality"]["description"] = "no fix"
+                    self.position["data"]["status"]  ="no fix"
                 elif gqr == 2:
                     self.position["data"]["gps_quality"]["description"] = "2D fix"
+                    self.position["data"]["status"]  ="valid"
                 elif gqr == 3:
                     self.position["data"]["gps_quality"]["description"] = "3D fix"
+                    self.position["data"]["status"]  ="valid"
                 
                 self.position["data"]["gps_quality"]["error"]["epx"] = (
                     self.__get_float_val(jobject, "epx")
@@ -534,6 +539,10 @@ class DataModel:
 
                 self.position["data"]["gps_quality"]["error"]["ept"] = (
                     self.__get_float_val(jobject, "ept")
+                )
+                
+                self.position["data"]["gps_quality"]["error"]["sep"] = (
+                    self.__get_float_val(jobject, "sep")
                 )
 
                 self.position["update_ts"] = time.time()

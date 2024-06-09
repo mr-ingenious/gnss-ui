@@ -11,6 +11,7 @@ from gpsd_client import GpsdClient
 from observer import Observer
 
 from position_info_panel import PositionInfoPanel
+from gnss_info_panel import GnssInfoPanel
 from satellites_info_panel import SatellitesInfoPanel
 from satellites_graphic_panel import SatellitesGraphicPanel
 
@@ -45,7 +46,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.6.1"
+APP_VERSION = "0.7.0"
 
 
 class PanelRefresher(threading.Thread):
@@ -125,6 +126,13 @@ class MainWindow(Gtk.ApplicationWindow):
             self.position_info_panel.set_visible(False)
         self.main_box.append(self.position_info_panel)
 
+        self.gnss_info_panel = GnssInfoPanel()
+        if "position" in self.config.get_param("startup/panels_shown"):
+            self.gnss_info_panel.set_visible(True)
+        else:
+            self.gnss_info_panel.set_visible(False)
+        self.main_box.append(self.gnss_info_panel)
+
         self.satellites_info_panel = SatellitesInfoPanel()
         if "satellites_list" in self.config.get_param("startup/panels_shown"):
             self.satellites_info_panel.set_visible(True)
@@ -178,6 +186,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.left_menu_panel = LeftMenuPanel(
             self.position_info_panel,
+            self.gnss_info_panel,
             self.satellites_info_panel,
             self.satellites_radar_panel,
             self.map_panel,
@@ -248,6 +257,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.satellites_info_panel.update(self.data.position, self.data.satellites)
         self.satellites_radar_panel.update(self.data.satellites)
         self.map_panel.update(self.data.position, self.data.satellites)
+        self.gnss_info_panel.update(self.data.position)
         self.recorder_panel.update()
 
     def updateJSON(self, jobject):

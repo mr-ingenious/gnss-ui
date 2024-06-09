@@ -13,6 +13,7 @@ class LeftMenuPanel(Panel):
     def __init__(
         self,
         position_info_panel,
+        gnss_info_panel,
         satellites_info_panel,
         satellites_radar_panel,
         map_panel,
@@ -21,6 +22,7 @@ class LeftMenuPanel(Panel):
         super().__init__()
 
         self.position_info_panel = position_info_panel
+        self.gnss_info_panel = gnss_info_panel
         self.satellites_info_panel = satellites_info_panel
         self.satellites_radar_panel = satellites_radar_panel
         self.map_panel = map_panel
@@ -109,6 +111,7 @@ class LeftMenuPanel(Panel):
 
     def on_position_info_button_pressed(self, button):
         self.position_info_panel.set_visible(not self.position_info_panel.get_visible())
+        self.gnss_info_panel.set_visible(not self.gnss_info_panel.get_visible())
         self.__set_icon(
             self.position_info_panel,
             self.position_icon,
