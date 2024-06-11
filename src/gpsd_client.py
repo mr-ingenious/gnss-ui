@@ -76,7 +76,8 @@ class GpsdClient(threading.Thread):
 
     def send_enable_command(self):
         self.logger.info("sending enable command.")
-        cmd = '?WATCH={"enable":true,"json":true,"nmea":true}'
+        # cmd = '?WATCH={"enable":true,"json":true,"nmea":true}'
+        cmd = '?WATCH={"enable":true,"json":true,"nmea":false}'
         self.socket.send(cmd.encode())
 
     def send_disable_command(self):

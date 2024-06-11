@@ -11,12 +11,13 @@ from gpsd_client import GpsdClient
 from observer import Observer
 
 from position_info_panel import PositionInfoPanel
-from satellites_info_panel2 import SatellitesInfoPanel
+from gnss_info_panel import GnssInfoPanel
+from satellites_info_panel import SatellitesInfoPanel
 from satellites_graphic_panel import SatellitesGraphicPanel
 
 from preferences_dialog2 import PreferencesDialog
 
-from data_recorder import DataRecorder
+from data_recorder import DataRecorder, DataRecorderStatus
 
 from gpsd_panel import GpsdPanel
 
@@ -45,7 +46,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.5.2"
+APP_VERSION = "0.7.2"
 
 
 class PanelRefresher(threading.Thread):
@@ -125,6 +126,13 @@ class MainWindow(Gtk.ApplicationWindow):
             self.position_info_panel.set_visible(False)
         self.main_box.append(self.position_info_panel)
 
+        self.gnss_info_panel = GnssInfoPanel()
+        if "position" in self.config.get_param("startup/panels_shown"):
+            self.gnss_info_panel.set_visible(True)
+        else:
+            self.gnss_info_panel.set_visible(False)
+        self.main_box.append(self.gnss_info_panel)
+
         self.satellites_info_panel = SatellitesInfoPanel()
         if "satellites_list" in self.config.get_param("startup/panels_shown"):
             self.satellites_info_panel.set_visible(True)
@@ -178,6 +186,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.left_menu_panel = LeftMenuPanel(
             self.position_info_panel,
+            self.gnss_info_panel,
             self.satellites_info_panel,
             self.satellites_radar_panel,
             self.map_panel,
@@ -207,12 +216,25 @@ class MainWindow(Gtk.ApplicationWindow):
         self.connect("close-request", self.handle_close_request)
 
     def handle_close_request(self, data):
-        self.logger.debug("AW: close-request")
-        self.panels_update_thread.signalize_stop()
-        self.gpsdc.signalize_stop()
+        self.logger.debug("App: close-request")
+
+        if self.recorder.get_status() != DataRecorderStatus.RECORDING_IDLE:
+            self.logger.info("App: recording is still in progress, closing aborted.")
+            self.dialog = Gtk.AlertDialog()
+            self.dialog.set_detail("Recording still in progress!")
+            self.dialog.set_modal(True)
+            self.dialog.show(self)
+            return True  # True: abort closing the main window
+
+        self.logger.info("App: exiting")
+        self.handle_exit()
+        return False
 
     def handle_exit(self):
-        self.logger.info("stopping gpsd client")
+        self.logger.info("stopping gpsd client and panels update thread")
+        self.panels_update_thread.signalize_stop()
+        self.panels_update_thread.join(5)
+
         self.gpsdc.signalize_stop()
         self.gpsdc.join(5)
 
@@ -235,12 +257,16 @@ class MainWindow(Gtk.ApplicationWindow):
         self.satellites_info_panel.update(self.data.position, self.data.satellites)
         self.satellites_radar_panel.update(self.data.satellites)
         self.map_panel.update(self.data.position, self.data.satellites)
+        self.gnss_info_panel.update(self.data.position)
         self.recorder_panel.update()
 
     def updateJSON(self, jobject):
         self.data.updateJSON(jobject)
         self.received_json_message_ct += 1
         GLib.idle_add(self.update_statusbar)
+        
+        if self.data != None:
+            self.recorder.update(self.data)
 
     def update_statusbar(self):
         self.main_status_text.set_label(

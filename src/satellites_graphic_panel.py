@@ -24,7 +24,7 @@ class SatellitesGraphicPanel(Panel):
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
-        
+
         self.drawing_area = Gtk.DrawingArea()
 
         if self.is_dashboard:
@@ -59,7 +59,7 @@ class SatellitesGraphicPanel(Panel):
 
         for i in range(1, 5):
             # x, y, radius, start_angle, stop_angle
-            
+
             r = min(width, height) / 2 - 10
             if self.is_dashboard:
                 r = min(width, height) / 2
@@ -78,7 +78,7 @@ class SatellitesGraphicPanel(Panel):
             context.set_font_size(15)
 
         # add some value tags
-        
+
         if not self.is_dashboard:
             self.draw_element(context, width, height, 30, 30, " 30°")
             self.draw_element(context, width, height, 30, 60, " 60°")
@@ -120,7 +120,9 @@ class SatellitesGraphicPanel(Panel):
             return
 
         for sat, value in self.satellites["data"].items():
-            if value["azimuth"] == -1 and value["elevation"] == -1:
+            if (value["azimuth"] == -1.0 and value["elevation"] == -1.0) or (
+                value["azimuth"] == 0.0 and value["elevation"] == 0.0
+            ):
                 continue
 
             if value["system"] == "GP":
@@ -136,13 +138,16 @@ class SatellitesGraphicPanel(Panel):
             else:
                 context.set_source_rgb(0.0, 0.0, 0.0)
 
+            satname = sat
+            if value["used"] == True:
+                satname = "[" + sat + "]"
             self.draw_element(
                 context,
                 width,
                 height,
                 int(value["azimuth"]),
                 int(value["elevation"]),
-                sat,
+                satname,
                 ("", "-used-")[value["used"]],
             )
 
@@ -180,7 +185,7 @@ class SatellitesGraphicPanel(Panel):
 
             if len(subtitle) > 0:
                 context.move_to(px, py + 25)
-                context.set_font_size(9)
+                context.set_font_size(10)
                 context.show_text(subtitle)
 
     def update(self, sat_info):

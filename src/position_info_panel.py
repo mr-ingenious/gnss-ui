@@ -51,8 +51,8 @@ class PositionInfoPanel(Panel):
 
         self.__add_to_grid("sog_kph", "SOG [kph]:", 6)
 
-        if not self.is_dashboard:
-            self.__add_to_grid("sog_kts", "SOG [kts]:", 7)
+        # if not self.is_dashboard:
+        #    self.__add_to_grid("sog_kts", "SOG [kts]:", 7)
 
         self.__add_to_grid("status", "Status:", 8)
         self.__add_to_grid("gps_quality", "GPS quality:", 9)
@@ -67,6 +67,7 @@ class PositionInfoPanel(Panel):
         self.grid.insert_row(_row)
 
         new_label = Gtk.Label(name=_name + "_label", label=_label)
+        new_label.set_xalign(0)
 
         if self.is_dashboard:
             new_label.set_css_classes(["map_dashboard_label"])
@@ -109,19 +110,21 @@ class PositionInfoPanel(Panel):
                 + position_info["data"]["longitude"]["direction"],
             )
 
-            self.__change_value("cog", str(position_info["data"]["cog"]["cog_deg"]))
+            self.__change_value("cog", str(position_info["data"]["cog"]["deg"]))
             self.__change_value(
-                "mag_var", str(position_info["data"]["cog"]["magvar_deg"])
+                "mag_var", "{:.2f}".format(position_info["data"]["cog"]["magvar_deg"])
             )
 
             self.__change_value("hdop", str(position_info["data"]["dop"]["hdop"]))
             self.__change_value("pdop", str(position_info["data"]["dop"]["pdop"]))
             self.__change_value("vdop", str(position_info["data"]["dop"]["vdop"]))
-            self.__change_value("altitude", str(position_info["data"]["altitude"]))
+            self.__change_value(
+                "altitude", str(position_info["data"]["altitude"]["msl"])
+            )
             self.__change_value("sog_kph", str(position_info["data"]["sog"]["kph"]))
 
-            if not self.is_dashboard:
-                self.__change_value("sog_kts", str(position_info["data"]["sog"]["kts"]))
+            # if not self.is_dashboard:
+            #    self.__change_value("sog_kts", str(position_info["data"]["sog"]["kts"]))
             self.__change_value("status", str(position_info["data"]["status"]))
             self.__change_value(
                 "gps_quality", str(position_info["data"]["gps_quality"]["description"])

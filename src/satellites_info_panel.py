@@ -17,173 +17,163 @@ class SatellitesInfoPanel(Panel):
         super().__init__()
 
         self.last_update = 0
+        self.satellites_shown = dict()
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
 
         self.logger = logging.getLogger("app")
 
-        self.sw = Gtk.ScrolledWindow()
-
-        self.content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-
-        self.content.set_vexpand(True)
-        self.sw.set_child(self.content)
+        self.panel_label = Gtk.Label(label="Satellites")
+        self.panel_label.set_css_classes(["panel_title"])
+        self.append(self.panel_label)
 
         self.set_css_classes(["satellites_info_panel", "panel"])
 
-        self.sv_grid = Gtk.Grid()
-        self.sv_grid.set_css_classes(["sv_grid"])
-        self.sv_grid.set_row_spacing(5)
-        self.sv_grid.set_column_spacing(10)
+        self.satellites_summary = Gtk.Label(label="# Satellites: -")
+        self.append(self.satellites_summary)
 
-        self.sv_grid.insert_column(1)
-        self.sv_grid.insert_column(1)
-        self.sv_grid.insert_column(1)
-        self.sv_grid.insert_column(1)
-        self.sv_grid.insert_column(1)
-        self.sv_grid.insert_column(1)
+        # satellites table
+        self.list_frame = Gtk.Frame()
+        self.list_frame.set_visible(True)
+        self.list_frame.set_css_classes(["recording_box"])
 
-        self.panel_label = Gtk.Label(label="Satellites")
-        self.panel_label.set_css_classes(["panel_title"])
-        self.content.append(self.panel_label)
-        self.content.append(self.sv_grid)
-        self.append(self.sw)
+        self.sw = Gtk.ScrolledWindow()
+        self.sw.set_vexpand(True)
 
-        self.sv_grid_h0 = Gtk.Label(name="_sv_list_h0", label="SAT")
-        self.sv_grid_h0.set_css_classes(["label"])
-        self.sv_grid.attach(self.sv_grid_h0, 1, 1, 1, 1)
+        self.satellites_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.sw.set_child(self.satellites_box)
 
-        self.sv_grid_h0 = Gtk.Label(name="_sv_list_h1", label="U")
-        self.sv_grid_h0.set_css_classes(["label"])
-        self.sv_grid.attach(self.sv_grid_h0, 2, 1, 1, 1)
+        self.list_frame.set_child(self.sw)
 
-        self.sv_grid_h1 = Gtk.Label(name="_sv_list_h2", label="PRN")
-        self.sv_grid_h1.set_css_classes(["label"])
-        self.sv_grid.attach(self.sv_grid_h1, 3, 1, 1, 1)
+        self.satellites_list = Gtk.ListBox()
+        self.satellites_list.set_css_classes(["recordings_table"])
+        self.satellites_list.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.satellites_list.set_show_separators(True)
+        self.satellites_box.append(self.satellites_list)
+        self.append(self.list_frame)
 
-        self.sv_grid_h2 = Gtk.Label(name="_sv_list_h3", label="EL")
-        self.sv_grid_h2.set_css_classes(["label"])
-        self.sv_grid.attach(self.sv_grid_h2, 4, 1, 1, 1)
+    def build_list_item(self, sat):
+        satellite_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        satellite_name = sat["system"] + "-" + sat["id"]
 
-        self.sv_grid_h3 = Gtk.Label(name="_sv_list_h4", label="AZ")
-        self.sv_grid_h3.set_css_classes(["label"])
-        self.sv_grid.attach(self.sv_grid_h3, 5, 1, 1, 1)
+        satellite_icon = Gtk.Picture()
+        if sat["used"]:
+            satellite_icon.set_filename("gnss-ui/assets/satellite_icon_used.svg")
+        else:
+            satellite_icon.set_filename("gnss-ui/assets/satellite_icon.svg")
 
-        self.sv_grid_h4 = Gtk.Label(name="_sv_list_h5", label="SNR")
-        self.sv_grid_h4.set_css_classes(["label"])
-        self.sv_grid.attach(self.sv_grid_h4, 6, 1, 1, 1)
+        satellite_box.set_name(satellite_name)
+        satellite_box.set_css_classes("[recording_list_item]")
+        satellite_box.append(satellite_icon)
 
-        for x in range(
-            2, 66
-        ):  # 16 satellites per 4 systems (GPS, Galileo, Beidou, Glonass)
-            self.__add_to_sv_grid(
-                "gsv.sat_info_" + str(x - 1), "#" + str(x - 1) + ":", (x)
+        el_text = str(sat["elevation"]) + "°"
+        az_text = str(sat["azimuth"]) + "°"
+        snr_text = str(sat["snr"]) + "dB"
+        if el_text == "-1.0°" and az_text == "-1.0°":
+            el_text = "-"
+            az_text = "-"
+
+        if snr_text == "-1.0dB":
+            snr_text = "-"
+
+        satid_label = Gtk.Label(label=satellite_name)
+        satid_label.set_css_classes(["satellites_info_satellite_name"])
+        satellite_box.append(satid_label)
+
+        elevation_label = Gtk.Label(label="EL")
+        elevation_label.set_css_classes(["satellites_info_label"])
+        satellite_box.append(elevation_label)
+
+        elevation_value = Gtk.Label(label=el_text)
+        elevation_value.set_css_classes(["satellites_info_value"])
+        satellite_box.append(elevation_value)
+
+        azimuth_label = Gtk.Label(label="AZ")
+        azimuth_label.set_css_classes(["satellites_info_label"])
+        satellite_box.append(azimuth_label)
+
+        azimuth_value = Gtk.Label(label=az_text)
+        azimuth_value.set_css_classes(["satellites_info_value"])
+        satellite_box.append(azimuth_value)
+
+        snr_label = Gtk.Label(label="SNR")
+        snr_label.set_css_classes(["satellites_info_label"])
+        satellite_box.append(snr_label)
+
+        snr_value = Gtk.Label(label=snr_text)
+        snr_value.set_css_classes(["satellites_info_value"])
+        satellite_box.append(snr_value)
+
+        return satellite_box
+
+    def update_row(self, sat, remove_only=False):
+        sat_name = sat["system"] + "-" + sat["id"]
+
+        for row_idx in range(0, 65):
+            row_item = self.satellites_list.get_row_at_index(row_idx)
+            if row_item != None:
+                if row_item.get_first_child().get_name() == sat_name:
+                    self.logger.debug(
+                        "sat list: update: %s (row %i)", sat_name, row_idx
+                    )
+                    self.satellites_list.remove(row_item)
+
+                    if not remove_only:
+                        self.satellites_list.insert(self.build_list_item(sat), row_idx)
+                    break
+            else:
+                self.logger.warn("sat list: updating %s failed - not found!", sat_name)
+                break
+
+    def is_equal(self, sat1, sat2):
+        if (
+            sat1["id"] == sat2["id"]
+            and sat1["system"] == sat2["system"]
+            and sat1["elevation"] == sat2["elevation"]
+            and sat1["azimuth"] == sat2["azimuth"]
+            and sat1["snr"] == sat2["snr"]
+            and sat1["used"] == sat2["used"]
+        ):
+            return True
+        else:
+            return False
+
+    def update(self, position_info, sat_info):
+        if self.get_visible() and time.time() - self.last_update > 1:
+            self.satellites_summary.set_label(
+                "# Satellites: "
+                + str(len(sat_info["data"].keys()))
+                + " (in use:"
+                + str(position_info["data"]["satellites_in_use"])
+                + ")"
             )
 
-    def __add_to_sv_grid(self, _name, _label, _row):
-        self.sv_grid.insert_row(_row)
-
-        new_label = Gtk.Label(name=_name + "_label", label=_label)
-        new_label.set_css_classes(["label"])
-        self.sv_grid.attach(new_label, 1, _row, 1, 1)
-
-        new_label = Gtk.Label(name=_name + "_value_used", label="")
-        new_label.set_css_classes(["sv_value"])
-        self.sv_grid.attach(new_label, 2, _row, 1, 1)
-
-        new_value = Gtk.Label(name=_name + "_value_prn", label="")
-        new_value.set_css_classes(["sv_value"])
-        self.sv_grid.attach(new_value, 3, _row, 1, 1)
-
-        new_value = Gtk.Label(name=_name + "_value_elevation", label="")
-        new_value.set_css_classes(["sv_value"])
-        self.sv_grid.attach(new_value, 4, _row, 1, 1)
-
-        new_value = Gtk.Label(name=_name + "_value_azimuth", label="")
-        new_value.set_css_classes(["sv_value"])
-        self.sv_grid.attach(new_value, 5, _row, 1, 1)
-
-        new_value = Gtk.Label(name=_name + "_value_snr", label="")
-        new_value.set_css_classes(["sv_value"])
-        self.sv_grid.attach(new_value, 6, _row, 1, 1)
-
-    def __change_sv_value(self, num, used, prn, elevation, azimuth, snr):
-        next_element = self.sv_grid.get_first_child()
-
-        prefix = "gsv.sat_info_" + str(num)
-
-        while next_element != None:
-            if next_element.get_name() == prefix + "_value_used":
-                next_element.set_label(used)
-                next_element = next_element.get_next_sibling()
-                continue
-
-            if next_element.get_name() == prefix + "_value_prn":
-                next_element.set_label(prn)
-                next_element = next_element.get_next_sibling()
-                continue
-
-            if next_element.get_name() == prefix + "_value_elevation":
-                next_element.set_label(elevation)
-                next_element = next_element.get_next_sibling()
-                continue
-
-            if next_element.get_name() == prefix + "_value_azimuth":
-                next_element.set_label(azimuth)
-                next_element = next_element.get_next_sibling()
-                continue
-
-            if next_element.get_name() == prefix + "_value_snr":
-                next_element.set_label(snr)
-                next_element = next_element.get_next_sibling()
-                continue
-
-            else:
-                next_element = next_element.get_next_sibling()
-
-    def update(self, sat_info):
-        if self.get_visible():
-            idx = 1
-
-            keys = sorted(sat_info["data"].keys())
-
-            for k in keys:
+            for k in sorted(sat_info["data"].keys()):
                 # self.logger.debug("--- satellite %s", k)
-                currsat = sat_info["data"].get(k)
 
-                used = ""
-                if currsat["used"]:
-                    used = "U"
+                if k not in self.satellites_shown:
+                    self.logger.debug("sat list: add %s", k)
+                    # self.logger.debug("sat list: %s", repr(sat_info))
 
-                el_text = str(currsat["elevation"]) + "°"
-                az_text = str(currsat["azimuth"]) + "°"
-                snr_text = str(currsat["snr"]) + "dB"
-                if el_text == "-1°" and az_text == "-1°":
-                    el_text = "-"
-                    az_text = "-"
+                    self.satellites_list.append(
+                        self.build_list_item(sat_info["data"].get(k))
+                    )
+                    self.satellites_shown[k] = sat_info["data"].get(k)
+                else:
+                    if not self.is_equal(
+                        sat_info["data"].get(k), self.satellites_shown[k]
+                    ):
+                        # self.logger.info("--- update: %s", k)
+                        # update existing satellite data
+                        self.update_row(sat_info["data"].get(k))
+                        self.satellites_shown[k] = sat_info["data"].get(k)
+                    else:
+                        pass  # self.logger.info("--- no change: %s", k)
 
-                if snr_text == "-1dB":
-                    snr_text = "-"
-
-                self.__change_sv_value(
-                    idx,
-                    used,
-                    k,
-                    el_text,
-                    az_text,
-                    snr_text,
-                )
-
-                idx += 1
-
-            for i in range(idx, 65):
-                self.__change_sv_value(
-                    i,
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                )
+            for k in list(self.satellites_shown.keys()):
+                if sat_info["data"].get(k) == None:
+                    self.logger.debug("sat list: remove %s", k)
+                    self.update_row(self.satellites_shown.get(k), True)
+                    self.satellites_shown.pop(k)
 
             self.last_update = time.time()

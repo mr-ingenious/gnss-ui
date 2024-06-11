@@ -19,7 +19,7 @@ class DataModel:
         self.position = dict()
         self.position["update_ts"] = 0
         self.position["data"] = {
-            "dop": {"hdop": 0.0, "vdop": 0.0, "pdop": 0.0},
+            "dop": {"hdop": 0.0, "vdop": 0.0, "pdop": 0.0, "gdop": 0.0, "xdop": 0.0, "ydop": 0.0, "tdop": 0.0},
             "latitude": {
                 "string": "",
                 "decimal": 0.0,
@@ -30,13 +30,36 @@ class DataModel:
                 "decimal": 0.0,
                 "direction": "",
             },
-            "cog": {"cog_deg": 0.0, "magvar_deg": 0.0},
-            "gps_quality": {"indicator": 0, "description": ""},
-            "altitude": 0.0,
+            "ecef": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "p_acc": 0.0,
+                "vx": 0.0,
+                "vy": 0.0,
+                "vz": 0.0,
+            },
+            "cog": {"deg": 0.0, "mag_deg": 0.0, "magvar_deg": 0.0},
+            "gps_quality": {
+                "indicator": 0,
+                "description": "",
+                "error": {
+                    "epx": 0.0,
+                    "epy": 0.0,
+                    "epv": 0.0,
+                    "eph": 0.0,
+                    "eps": 0.0,
+                    "epc": 0.0,
+                    "epd": 0.0,
+                    "ept": 0.0,
+                    "sep" : 0.0
+                },
+            },
+            "altitude": {"hae": 0.0, "msl": 0.0},
             "geoid_separation": 0.0,
             "sog": {"kts": 0.0, "kph": 0.0},
             "satellites_in_use": 0,
-            "status": "",
+            "status": "unknown",
         }
 
         self.time = dict()
@@ -129,7 +152,7 @@ class DataModel:
                 magvar_deg = float(msg["magvar_deg"])
 
             self.position["data"]["cog"] = {
-                "cog_deg": cog_deg,
+                "deg": cog_deg,
                 "magvar_deg": magvar_deg,
             }
 
@@ -146,13 +169,19 @@ class DataModel:
         elif msg["type"] == "GSV":
             # self.logger.debug("GSV: " + repr(msg))
 
-            if msg["talker"] == "GN":
-                self.logger.debug("GSV: talker GN: " + repr(msg))
+            # if msg["talker"] == "GN":
+            #    self.logger.debug("GSV: talker GN: " + repr(msg))
 
             for i in range(1, 5):
                 try:
                     if msg.get("sat_" + str(i) + "_num") != None:
                         name = msg["talker"] + "-" + msg["sat_" + str(i) + "_num"]
+
+                        if msg["sat_" + str(i) + "_num"] == "":
+                            self.logger.debug(
+                                "GSV: got sat data without PRN, skipping."
+                            )
+                            continue
 
                         if None == self.satellites["data"].get(name):
                             self.logger.debug(
@@ -183,6 +212,7 @@ class DataModel:
                             snr = float(msg["sat_" + str(i) + "_snr_db"])
 
                         self.satellites["data"][name] = {
+                            "id": msg["sat_" + str(i) + "_num"],
                             "prn": msg["sat_" + str(i) + "_num"],
                             "system": msg["talker"],
                             "elevation": el,
@@ -252,32 +282,15 @@ class DataModel:
             if msg["vdop"] != "":
                 vdop = float(msg["vdop"])
 
-            self.position["data"].update(
-                {"dop": {"hdop": hdop, "vdop": vdop, "pdop": pdop}}
-            )
+            self.position["data"]["dop"]["hdop"] = hdop
+            self.position["data"]["dop"]["vdop"] = vdop
+            self.position["data"]["dop"]["pdop"] = pdop
 
             self.position["update_ts"] = time.time()
 
             self.satellites["update_ts"] = time.time()
 
-            keys = list(self.satellites["data"].keys())
-
-            for k in keys:
-                # self.logger.debug("--- %s", k)
-                if k != "update_ts":
-                    if (time.time() - self.satellites["data"].get(k)["update_ts"]) > 5:
-                        self.logger.debug("GSA: %s - data too old, removing.", k)
-                        self.satellites["data"].pop(k)
-                    elif (
-                        time.time() - self.satellites["data"].get(k)["last_used_ts"]
-                        > 10
-                    ):
-                        #self.logger.debug(
-                        #    "GSA: %s - last_used_ts too old, setting 'used' to 'false'.",
-                        #    k,
-                        #)
-                        self.satellites["data"].get(k)["used"] = False
-                        self.satellites["data"].get(k)["last_used_ts"] = time.time()
+            self.update_satellites_list()
 
         elif msg["type"] == "GGA":
             # self.logger.debug("GGA: " + repr(msg))
@@ -303,13 +316,14 @@ class DataModel:
             elif gqr == 8:
                 gq = "Simulator"
 
-            self.position["data"]["gps_quality"] = {"indicator": gqr, "description": gq}
+            self.position["data"]["gps_quality"]["indicator"] = gqr
+            self.position["data"]["gps_quality"]["description"] = self.get_gps_quality_desc(gqr)
 
             altitude = 0.0
             if msg["antenna_asl"] != "":
                 altitude = float(msg["antenna_asl"])
 
-            self.position["data"]["altitude"] = altitude
+            self.position["data"]["altitude"]["msl"] = altitude
 
             geosep = 0.0
             if msg["geosep"] != "":
@@ -347,6 +361,319 @@ class DataModel:
 
         self.last_values_update = time.time()
 
+    def get_gps_quality_desc(self, qval):
+            gq = "unknown"
+            if qval == 0:
+                gq = "Invalid / unavail."
+            elif qval == 1:
+                gq = "GPS (SPS)"
+            elif qval == 2:
+                gq = "Diff. GPS (SPS)"
+            elif qval == 3:
+                gq = "GPS (PPS)"
+            elif qval == 4:
+                gq = "RTK fixed int."
+            elif qval == 5:
+                gq = "RTK, float int."
+            elif qval == 6:
+                gq = "Estimated (DR)"
+            elif qval == 7:
+                gq = "Manual Input"
+            elif qval == 8:
+                gq = "Simulator"
+                
+            return gq
+        
+    def update_satellites_list(self):
+        keys = list(self.satellites["data"].keys())
+
+        for k in keys:
+            # self.logger.debug("--- %s", k)
+            if k != "update_ts":
+                u_tdiff = time.time() - self.satellites["data"].get(k)["update_ts"]
+                lu_tdiff = time.time() - self.satellites["data"].get(k)["last_used_ts"]
+                if u_tdiff > 10.0:
+                    self.logger.debug("sat %s: data too old (%f), removing.", k, u_tdiff)
+                    self.satellites["data"].pop(k)
+                elif lu_tdiff > 10.0:
+                    self.logger.debug(
+                        "sat %s: last_used_ts too old (%f), setting 'used' to 'false'.",
+                        k, lu_tdiff)
+                    self.satellites["data"].get(k)["used"] = False
+                    self.satellites["data"].get(k)["last_used_ts"] = time.time()
+                        
+                        
+    # https://gpsd.gitlab.io/gpsd/gpsd_json.html
     def updateJSON(self, jobject):
-        # self.logger.debug("DataModel: JSON update, object:", repr(jobject))
-        pass
+        # self.logger.debug("DataModel: JSON update, object: %s", jobject)
+
+        try:
+            if jobject["class"] == "TPV":
+                #self.logger.debug("JSON: --> TPV")
+                #self.logger.debug("JSON: %s", jobject)
+                """
+                
+                GPSD JSON EXAMPLE:
+                
+                {
+                    'class': 'TPV',
+                    'device': '/dev/ttyUSB1',
+                    'mode': 3,
+                    'time': '2024-06-08T13:53:22.500Z',
+                    'ept': 0.005,
+                    'lat': 49.3333333,
+                    'lon': 11.33333333,
+                    'altHAE': 334.9,
+                    'altMSL': 287.9,
+                    'alt': 287.9,
+                    'epx': 27.14,
+                    'epy': 18.687,
+                    'epv': 23.0,
+                    'track': 224.7,
+                    'magtrack': 224.4,
+                    'magvar': 0.3,
+                    'speed': 0.0,
+                    'climb': 0.0,
+                    'eps': 108.56,
+                    'epc': 92.0,
+                    'geoidSep': 47.0,
+                    'eph': 34.2,
+                    'sep': 38.0
+                }
+                """
+                self.position["data"]["longitude"]["decimal"] = self.__get_float_val(
+                    jobject, "lon"
+                )
+                self.position["data"]["latitude"]["decimal"] = self.__get_float_val(
+                    jobject, "lat"
+                )
+                self.position["data"]["altitude"]["hae"] = self.__get_float_val(
+                    jobject, "altHAE"
+                )
+                self.position["data"]["altitude"]["msl"] = self.__get_float_val(
+                    jobject, "altMSL"
+                )
+                self.position["data"]["sog"]["kph"] = 3.6 * self.__get_float_val(
+                    jobject, "speed"
+                )
+                self.position["data"]["cog"]["deg"] = self.__get_float_val(
+                    jobject, "track"
+                )
+                self.position["data"]["cog"]["mag_deg"] = self.__get_float_val(
+                    jobject, "magtrack"
+                )
+                self.position["data"]["cog"]["magvar_deg"] = self.__get_float_val(
+                    jobject, "magvar"
+                )
+                self.position["data"]["geoid_separation"] = self.__get_float_val(
+                    jobject, "geoidSep"
+                )
+
+                self.position["data"]["ecef"]["x"] = self.__get_float_val(
+                    jobject, "ecefx"
+                )
+                self.position["data"]["ecef"]["y"] = self.__get_float_val(
+                    jobject, "ecefy"
+                )
+                self.position["data"]["ecef"]["z"] = self.__get_float_val(
+                    jobject, "ecefz"
+                )
+
+                self.position["data"]["ecef"]["p_acc"] = self.__get_float_val(
+                    jobject, "ecefpAcc"
+                )
+
+                self.position["data"]["ecef"]["vx"] = self.__get_float_val(
+                    jobject, "ecefvx"
+                )
+                self.position["data"]["ecef"]["vy"] = self.__get_float_val(
+                    jobject, "ecefvy"
+                )
+                self.position["data"]["ecef"]["vz"] = self.__get_float_val(
+                    jobject, "ecefvz"
+                )
+
+                gqr = self.__get_int_val(jobject, "mode", defval = 0)
+                self.position["data"]["gps_quality"]["indicator"] = gqr
+                
+                if gqr == 0:
+                    self.position["data"]["gps_quality"]["description"] = "unknown"
+                    self.position["data"]["status"]  ="unknown"
+                elif gqr == 1:
+                    self.position["data"]["gps_quality"]["description"] = "no fix"
+                    self.position["data"]["status"]  ="no fix"
+                elif gqr == 2:
+                    self.position["data"]["gps_quality"]["description"] = "2D fix"
+                    self.position["data"]["status"]  ="valid"
+                elif gqr == 3:
+                    self.position["data"]["gps_quality"]["description"] = "3D fix"
+                    self.position["data"]["status"]  ="valid"
+                
+                self.position["data"]["gps_quality"]["error"]["epx"] = (
+                    self.__get_float_val(jobject, "epx")
+                )
+
+                self.position["data"]["gps_quality"]["error"]["epy"] = (
+                    self.__get_float_val(jobject, "epy")
+                )
+
+                self.position["data"]["gps_quality"]["error"]["epv"] = (
+                    self.__get_float_val(jobject, "epv")
+                )
+
+                self.position["data"]["gps_quality"]["error"]["eps"] = (
+                    self.__get_float_val(jobject, "eps")
+                )
+
+                self.position["data"]["gps_quality"]["error"]["eph"] = (
+                    self.__get_float_val(jobject, "eph")
+                )
+
+                self.position["data"]["gps_quality"]["error"]["epc"] = (
+                    self.__get_float_val(jobject, "epc")
+                )
+
+                self.position["data"]["gps_quality"]["error"]["epd"] = (
+                    self.__get_float_val(jobject, "epd")
+                )
+
+                self.position["data"]["gps_quality"]["error"]["ept"] = (
+                    self.__get_float_val(jobject, "ept")
+                )
+                
+                self.position["data"]["gps_quality"]["error"]["sep"] = (
+                    self.__get_float_val(jobject, "sep")
+                )
+
+                self.position["update_ts"] = time.time()
+
+                self.logger.debug("JSON: %s", json.dumps(jobject, indent=4))
+                # self.logger.debug("JSON: datamodel: %s", repr(self.position))
+
+            elif jobject["class"] == "SKY":
+                
+                ''' EXAMPLE JSON:
+                    {
+                        'class': 'SKY',
+                        'device': '/dev/ttyUSB1',
+                        'gdop': 75.87,
+                        'hdop': 1.4,
+                        'pdop': 1.7,
+                        'tdop': 47.29,
+                        'xdop': 8.39,
+                        'ydop': 37.14,
+                        'vdop': 0.9,
+                        'uSat': 6
+                    }
+                '''
+                
+                self.position["data"]["dop"]["hdop"] = self.__get_float_val(jobject, "hdop")
+                self.position["data"]["dop"]["pdop"] = self.__get_float_val(jobject, "pdop")
+                self.position["data"]["dop"]["vdop"] = self.__get_float_val(jobject, "vdop")
+                self.position["data"]["dop"]["gdop"] = self.__get_float_val(jobject, "gdop")
+                self.position["data"]["dop"]["tdop"] = self.__get_float_val(jobject, "tdop")
+                self.position["data"]["dop"]["xdop"] = self.__get_float_val(jobject, "xdop")
+                self.position["data"]["dop"]["ydop"] = self.__get_float_val(jobject, "ydop")
+                
+                self.position["data"]["satellites_in_use"] = self.__get_int_val(jobject, "uSat")
+                
+                '''
+                {
+                    "PRN": 28,
+                    "gnssid": 0,
+                    "svid": 28,
+                    "az": 56.0,
+                    "el": 22.0,
+                    "ss": 19.0,
+                    "used": true
+                }
+                '''
+                
+                if "satellites" in jobject:
+                    for sat in jobject["satellites"]:
+                        system_id = "GN"
+                        
+                        if sat["gnssid"] == 0:
+                            system_id = "GP"
+                        elif sat["gnssid"] == 1:
+                            system_id = "SB"
+                        elif sat["gnssid"] == 2:
+                            system_id = "GA" # GALILEO
+                        elif sat["gnssid"] == 3:
+                            system_id = "PQ" # Beidou
+                        elif sat["gnssid"] == 4:
+                            system_id = "IM" # IMES
+                        elif sat["gnssid"] == 5:
+                            system_id = "QZ" # QZSS
+                        elif sat["gnssid"] == 6:
+                            system_id = "GL" # GLONASS
+                        elif sat["gnssid"] == 7:
+                            system_id = "NV" # NavIC
+                        
+                        name = system_id + "-" + str(sat["svid"])
+                        
+                        last_used_ts = 0.0
+                        if sat["used"] == True:
+                            last_used_ts = time.time()
+                        elif name in self.satellites["data"]:
+                                last_used_ts = self.satellites["data"][name]["last_used_ts"]                                
+                                
+                        self.satellites["data"][name] = {
+                            "id": str(sat["svid"]),
+                            "prn": str(sat["PRN"]),
+                            "system": system_id,
+                            "elevation": self.__get_float_val(sat, "el", defval=-1.0),
+                            "azimuth": self.__get_float_val(sat, "az", defval=-1.0),
+                            "snr": self.__get_float_val(sat, "ss", defval=-1.0),
+                            "update_ts": time.time(),
+                            "used": sat["used"],
+                            "last_used_ts": last_used_ts
+                        }                       
+                        
+                    self.satellites["update_ts"] = time.time()
+                
+                self.update_satellites_list()
+                # self.logger.debug("JSON: SKY")
+                # self.logger.debug("JSON: SKY: %s", json.dumps(jobject, indent=4))
+                
+                # self.logger.debug("JSON: datamodel: %s", repr(self.satellites))
+            elif jobject["class"] == "DEVICES":
+                self.logger.debug("JSON: %s: %s", jobject["class"], json.dumps(jobject, indent=4))
+            elif jobject["class"] == "ERROR":
+                self.logger.debug("JSON: %s: %s", jobject["class"], json.dumps(jobject, indent=4))
+            elif jobject["class"] == "VERSION":
+                self.logger.debug("JSON: %s: %s", jobject["class"], json.dumps(jobject, indent=4))
+            elif jobject["class"] == "WATCH":
+                self.logger.debug("JSON: %s: %s", jobject["class"], json.dumps(jobject, indent=4))
+            else:
+                self.logger.debug("JSON: UNSUPPORTED - %s: %s", jobject["class"], json.dumps(jobject, indent=4))
+        except Exception as e:
+            self.logger.warn("JSON parsing exception: %s", e)
+
+    def __get_float_val(self, json_val, key, defval = 0.0):
+        val = 0.0
+
+        try:
+            if json_val[key] != None and json_val[key] != "":
+                val = float(json_val[key])
+            else:
+                self.logger.warn("JSON value not found!")
+        except Exception as e:
+            # self.logger.debug("JSON parsing exception (%s): %s", key, e)
+            val = defval
+        
+        return val
+    
+    def __get_int_val(self, json_val, key, defval= 0):
+        val = 0
+
+        try:
+            if json_val[key] != None and json_val[key] != "":
+                val = int(json_val[key])
+            else:
+                self.logger.warn("JSON value not found!")
+        except Exception as e:
+            # self.logger.debug("JSON parsing exception (%s): %s", key, e)
+            val = defval
+        
+        return val
