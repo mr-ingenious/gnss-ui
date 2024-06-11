@@ -654,10 +654,11 @@ class DataModel:
         val = 0.0
 
         try:
-            if json_val[key] != None and json_val[key] != "":
+            if key in json_val and json_val[key] != "":
                 val = float(json_val[key])
             else:
-                self.logger.warn("JSON value not found!")
+                pass
+                # self.logger.warn("JSON value not found!")
         except Exception as e:
             # self.logger.debug("JSON parsing exception (%s): %s", key, e)
             val = defval

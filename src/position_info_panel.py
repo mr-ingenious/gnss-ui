@@ -121,7 +121,9 @@ class PositionInfoPanel(Panel):
             self.__change_value(
                 "altitude", str(position_info["data"]["altitude"]["msl"])
             )
-            self.__change_value("sog_kph", str(position_info["data"]["sog"]["kph"]))
+            self.__change_value(
+                "sog_kph", "{:.2f}".format(position_info["data"]["sog"]["kph"])
+            )
 
             # if not self.is_dashboard:
             #    self.__change_value("sog_kts", str(position_info["data"]["sog"]["kts"]))

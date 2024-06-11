@@ -46,11 +46,19 @@ class SatellitesInfoPanel(Panel):
         self.list_frame.set_child(self.sw)
 
         self.satellites_list = Gtk.ListBox()
+        # self.satellites_list.set_sort_func(sort_func=self.sort_list)
         self.satellites_list.set_css_classes(["recordings_table"])
         self.satellites_list.set_selection_mode(Gtk.SelectionMode.NONE)
         self.satellites_list.set_show_separators(True)
         self.satellites_box.append(self.satellites_list)
         self.append(self.list_frame)
+
+    def sort_list(self, row1, row2):
+        # self.logger.info("list sort: %s <<===>> %s", str(row1), str(row2))
+        if row1.get_child().get_name() < row2.get_child().get_name():
+            return 0
+        else:
+            return 1
 
     def build_list_item(self, sat):
         satellite_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -63,7 +71,6 @@ class SatellitesInfoPanel(Panel):
             satellite_icon.set_filename("gnss-ui/assets/satellite_icon.svg")
 
         satellite_box.set_name(satellite_name)
-        satellite_box.set_css_classes("[recording_list_item]")
         satellite_box.append(satellite_icon)
 
         el_text = str(sat["elevation"]) + "°"
@@ -73,11 +80,12 @@ class SatellitesInfoPanel(Panel):
             el_text = "-"
             az_text = "-"
 
-        if snr_text == "-1.0dB":
+        if snr_text == "-1.0dB" or snr_text == "0.0dB":
             snr_text = "-"
 
         satid_label = Gtk.Label(label=satellite_name)
         satid_label.set_css_classes(["satellites_info_satellite_name"])
+        satid_label.set_xalign(0)
         satellite_box.append(satid_label)
 
         elevation_label = Gtk.Label(label="EL")
@@ -86,6 +94,7 @@ class SatellitesInfoPanel(Panel):
 
         elevation_value = Gtk.Label(label=el_text)
         elevation_value.set_css_classes(["satellites_info_value"])
+        elevation_value.set_xalign(1)
         satellite_box.append(elevation_value)
 
         azimuth_label = Gtk.Label(label="AZ")
@@ -94,6 +103,7 @@ class SatellitesInfoPanel(Panel):
 
         azimuth_value = Gtk.Label(label=az_text)
         azimuth_value.set_css_classes(["satellites_info_value"])
+        azimuth_value.set_xalign(1)
         satellite_box.append(azimuth_value)
 
         snr_label = Gtk.Label(label="SNR")
@@ -102,6 +112,7 @@ class SatellitesInfoPanel(Panel):
 
         snr_value = Gtk.Label(label=snr_text)
         snr_value.set_css_classes(["satellites_info_value"])
+        snr_value.set_xalign(1)
         satellite_box.append(snr_value)
 
         return satellite_box
@@ -125,7 +136,7 @@ class SatellitesInfoPanel(Panel):
                 self.logger.warn("sat list: updating %s failed - not found!", sat_name)
                 break
 
-    def is_equal(self, sat1, sat2):
+    def __is_equal(self, sat1, sat2):
         if (
             sat1["id"] == sat2["id"]
             and sat1["system"] == sat2["system"]
@@ -160,7 +171,7 @@ class SatellitesInfoPanel(Panel):
                     )
                     self.satellites_shown[k] = sat_info["data"].get(k)
                 else:
-                    if not self.is_equal(
+                    if not self.__is_equal(
                         sat_info["data"].get(k), self.satellites_shown[k]
                     ):
                         # self.logger.info("--- update: %s", k)
