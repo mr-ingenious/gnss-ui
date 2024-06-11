@@ -67,6 +67,7 @@ class PositionInfoPanel(Panel):
         self.grid.insert_row(_row)
 
         new_label = Gtk.Label(name=_name + "_label", label=_label)
+        new_label.set_xalign(0)
 
         if self.is_dashboard:
             new_label.set_css_classes(["map_dashboard_label"])
@@ -122,7 +123,7 @@ class PositionInfoPanel(Panel):
             )
             self.__change_value("sog_kph", str(position_info["data"]["sog"]["kph"]))
 
-            #if not self.is_dashboard:
+            # if not self.is_dashboard:
             #    self.__change_value("sog_kts", str(position_info["data"]["sog"]["kts"]))
             self.__change_value("status", str(position_info["data"]["status"]))
             self.__change_value(

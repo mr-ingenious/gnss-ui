@@ -46,7 +46,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.7.1"
+APP_VERSION = "0.7.2"
 
 
 class PanelRefresher(threading.Thread):
@@ -264,6 +264,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.data.updateJSON(jobject)
         self.received_json_message_ct += 1
         GLib.idle_add(self.update_statusbar)
+        
+        if self.data != None:
+            self.recorder.update(self.data)
 
     def update_statusbar(self):
         self.main_status_text.set_label(

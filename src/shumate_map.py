@@ -35,6 +35,7 @@ class ShumateMapPanel(Panel):
     ):
         super().__init__()
 
+        self.track_points = list()
         self.last_map_update = 0
         self.last_latitude = start_latitude
         self.last_longitude = start_longitude
@@ -122,6 +123,11 @@ class ShumateMapPanel(Panel):
             selection_mode=Gtk.SelectionMode.SINGLE,
         )
 
+        self.track_layer = Shumate.MarkerLayer(
+            viewport=self.viewport,
+            selection_mode=Gtk.SelectionMode.SINGLE,
+        )
+
         self.marker = Shumate.Marker()
         self.marker.set_location(self.last_latitude, self.last_longitude)
         self.marker_icon = Gtk.Image()
@@ -131,6 +137,7 @@ class ShumateMapPanel(Panel):
 
         self.marker_layer.add_marker(self.marker)
         self.map_widget.get_map().add_layer(self.marker_layer)
+        self.map_widget.get_map().add_layer(self.track_layer)
         self.map_widget.set_visible(True)
 
         self.overlay.set_child(self.map_widget)
@@ -203,6 +210,10 @@ class ShumateMapPanel(Panel):
                 self.last_longitude = position_info["data"]["longitude"]["decimal"]
 
                 self.go_to_location(self.last_latitude, self.last_longitude)
+
+                self.track_points.append((self.last_latitude, self.last_longitude))
+                if len(self.track_points) > 100:
+                    self.track_points.pop(0)
 
             else:
                 if self.is_valid_location == False:

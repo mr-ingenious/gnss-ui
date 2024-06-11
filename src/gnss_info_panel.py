@@ -84,6 +84,7 @@ class GnssInfoPanel(Panel):
         self.grid.insert_row(_row)
 
         new_label = Gtk.Label(name=_name + "_label", label=_label)
+        new_label.set_xalign(0)
 
         if self.is_dashboard:
             new_label.set_css_classes(["map_dashboard_label"])
