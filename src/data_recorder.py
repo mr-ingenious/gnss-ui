@@ -1,6 +1,9 @@
 #! /usr/bin/python3
 
 import logging
+import logging.config
+
+
 import time
 
 from enum import Enum
@@ -27,11 +30,12 @@ class RecordingInfo:
 
 
 class DataRecorder:
-    def __init__(self, capture_interval=1):
+    def __init__(self, capture_interval=1, db_file="gnss_ui.db"):
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("recorder")
 
-        self.schema_version = "0.0.1"
+        self.schema_version = "0.0.2"
+        self.db = db_file
 
         self.capture_interval = capture_interval
         self.last_record_ts = 0
@@ -113,7 +117,7 @@ class DataRecorder:
 
     def __init_db(self):
         self.logger.info("initialize db")
-        self.connection = sqlite3.connect("gnss_ui.db", check_same_thread=False)
+        self.connection = sqlite3.connect(self.db, check_same_thread=False)
         cursor = self.connection.cursor()
         try:
             cursor.execute("CREATE TABLE IF NOT EXISTS version (schema, ts)")
@@ -122,21 +126,54 @@ class DataRecorder:
 
         try:
             cursor.execute(
-                "CREATE TABLE IF NOT EXISTS recordings (id integer primary key autoincrement, name, description, type, ts_start, ts_end)"
+                """ CREATE TABLE IF NOT EXISTS recordings (
+                    id integer primary key,
+                    name,
+                    description,
+                    type,
+                    ts_start,
+                    ts_end
+                    ) """
             )
         except sqlite3.OperationalError as e:
             self.logger.warn("recordings table: %s", str(e))
 
         try:
             cursor.execute(
-                "CREATE TABLE IF NOT EXISTS position_records (id integer primary key autoincrement, latitude, longitude, altitude, speed_kph, hdop, pdop, vdop, gps_quality, ts, recording_id)"
+                """ CREATE TABLE IF NOT EXISTS position_records (
+                    id integer primary key,
+                    latitude,
+                    longitude,
+                    altitude,
+                    sog_kph,
+                    sog_kts,
+                    cog_deg,
+                    magvar_deg,
+                    sat_in_use,
+                    hdop,
+                    pdop,
+                    vdop,
+                    gps_quality,
+                    geoid_sep,
+                    ts,
+                    recording_id
+                    ) """
             )
         except sqlite3.OperationalError as e:
             self.logger.warn("position_records table: %s", str(e))
 
         try:
             cursor.execute(
-                "CREATE TABLE IF NOT EXISTS satellite_records (id integer primary key autoincrement, prn, azimuth, elevation, snr, used, ts, recording_id)"
+                """ CREATE TABLE IF NOT EXISTS satellite_records (
+                    id integer primary key,
+                    prn,
+                    azimuth,
+                    elevation,
+                    snr,
+                    used,
+                    ts,
+                    recording_id
+                    ) """
             )
         except sqlite3.OperationalError as e:
             self.logger.warn("satellite_records table: %s", str(e))
@@ -146,7 +183,7 @@ class DataRecorder:
     def __add_recording_info(self, rec_info):
         sql = """ INSERT INTO recordings
                 (name, description, type, ts_start, ts_end)
-                VALUES (?,?,?,?,?)"""
+                VALUES (?,?,?,?,?) """
 
         values = (
             rec_info.name,
@@ -164,7 +201,7 @@ class DataRecorder:
     def __update_recording_info(self, rec_info):
         sql = """ UPDATE recordings SET
                 name = ?, description = ? , type = ? , ts_start = ? , ts_end = ?
-                where id = ?"""
+                where id = ? """
 
         values = (
             rec_info.name,
@@ -181,18 +218,37 @@ class DataRecorder:
 
     def __add_position_info(self, position, rec_info):
         sql = """ INSERT INTO position_records
-                (latitude, longitude, altitude, speed_kph,
-                hdop, pdop, vdop, gps_quality, ts, recording_id)
-                VALUES (?,?,?,?,?,?,?,?,?,?)"""
+                (   latitude,
+                    longitude,
+                    altitude,
+                    sog_kph,
+                    sog_kts,
+                    cog_deg,
+                    magvar_deg,
+                    sat_in_use,
+                    hdop,
+                    pdop,
+                    vdop,
+                    gps_quality,
+                    geoid_sep,
+                    ts,
+                    recording_id
+                    )
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) """
         values = (
             position["data"]["latitude"]["decimal"],
             position["data"]["longitude"]["decimal"],
             position["data"]["altitude"]["msl"],
             position["data"]["sog"]["kph"],
+            position["data"]["sog"]["kts"],
+            position["data"]["cog"]["deg"],
+            position["data"]["cog"]["magvar_deg"],
+            position["data"]["satellites_in_use"],
             position["data"]["dop"]["hdop"],
             position["data"]["dop"]["pdop"],
             position["data"]["dop"]["vdop"],
             position["data"]["gps_quality"]["indicator"],
+            position["data"]["geoid_separation"],
             position["update_ts"],
             rec_info.id,
         )
@@ -205,7 +261,7 @@ class DataRecorder:
     def __add_satellites_info(self, satellites, rec_info):
         sql = """ INSERT INTO satellite_records
                 (prn, azimuth, elevation, snr, used, ts, recording_id)
-                VALUES (?,?,?,?,?,?,?)"""
+                VALUES (?,?,?,?,?,?,?) """
 
         keys = sorted(satellites["data"].keys())
 
@@ -238,7 +294,7 @@ class DataRecorder:
         self.connection.commit()
 
     def get_recordings(self):
-        sql = """ SELECT * FROM recordings"""
+        sql = """ SELECT * FROM recordings """
 
         cursor = self.connection.cursor()
         cursor.execute(sql)
@@ -247,7 +303,7 @@ class DataRecorder:
     def get_recording_by_id(self, id):
         recording = dict()
         sql = """ SELECT * FROM recordings
-                    WHERE id = ?"""
+                    WHERE id = ? """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
@@ -266,15 +322,19 @@ class DataRecorder:
         return recording
 
     def delete_recording_by_id(self, recording_id):
+        if self.current_recording != None and self.current_recording.id == recording_id:
+            self.logger.warn("trying to delete currently active recording! Abort.")
+            return False
+
         self.logger.info(
             "delete recording and all associated data with id %i", recording_id
         )
         sql_1 = """ DELETE FROM recordings
-                WHERE id = ?"""
+                WHERE id = ? """
         sql_2 = """ DELETE FROM position_records
-                WHERE recording_id = ?"""
+                WHERE recording_id = ? """
         sql_3 = """ DELETE FROM satellite_records
-                WHERE recording_id = ?"""
+                WHERE recording_id = ? """
         cursor = self.connection.cursor()
         id = recording_id
 
@@ -284,15 +344,17 @@ class DataRecorder:
 
         self.connection.commit()
 
+        return True
+
     def get_position_data_by_id(self, id):
-        sql = """ SELECT * FROM position_records where recording_id = ?"""
+        sql = """ SELECT * FROM position_records where recording_id = ? """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
         return cursor.fetchall()
 
     def get_position_data_count_by_id(self, id):
-        sql = """ SELECT count(*) FROM position_records where recording_id = ?"""
+        sql = """ SELECT count(*) FROM position_records where recording_id = ? """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
@@ -306,21 +368,21 @@ class DataRecorder:
         return cursor.fetchone()[0]
 
     def get_satellite_data_by_id(self, id):
-        sql = """ SELECT * FROM satellite_records where recording_id = ?"""
+        sql = """ SELECT * FROM satellite_records where recording_id = ? """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
         return cursor.fetchall()
 
     def get_satellite_data_count_by_id(self, id):
-        sql = """ SELECT count(*) FROM satellite_records where recording_id = ?"""
+        sql = """ SELECT count(*) FROM satellite_records where recording_id = ? """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
         return cursor.fetchone()[0]
 
     def get_satellite_data_count(self):
-        sql = """ SELECT count(*) FROM satellite_records"""
+        sql = """ SELECT count(*) FROM satellite_records """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
@@ -339,4 +401,3 @@ class DataRecorder:
         self.connection.commit()
 
         self.__init_db()
-        pass

@@ -43,24 +43,22 @@ class DataRecorderPanel(Panel):
         self.icons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 
         self.start_rec_button_icon = Gtk.Picture()
-        self.start_rec_button_icon.set_filename(
-            "gnss-ui/assets/circle_dot_round_icon.svg"
-        )
+        self.start_rec_button_icon.set_filename("gnss-ui/assets/record_icon.svg")
 
         self.start_rec_button_icon_inactive = Gtk.Picture()
         self.start_rec_button_icon_inactive.set_filename(
-            "gnss-ui/assets/circle_dot_round_icon_inactive.svg"
+            "gnss-ui/assets/record_icon_inactive.svg"
         )
 
         self.pause_rec_button_icon = Gtk.Picture()
-        self.pause_rec_button_icon.set_filename("gnss-ui/assets/circle_pause_icon.svg")
+        self.pause_rec_button_icon.set_filename("gnss-ui/assets/pause_recording_icon.svg")
 
         self.stop_rec_button_icon = Gtk.Picture()
-        self.stop_rec_button_icon.set_filename("gnss-ui/assets/circle_stop_icon.svg")
+        self.stop_rec_button_icon.set_filename("gnss-ui/assets/stop_recording_icon.svg")
 
         self.stop_rec_button_icon_inactive = Gtk.Picture()
         self.stop_rec_button_icon_inactive.set_filename(
-            "gnss-ui/assets/circle_stop_icon_inactive.svg"
+            "gnss-ui/assets/stop_recording_icon_inactive.svg"
         )
 
         self.export_rec_button_icon = Gtk.Picture()
@@ -79,21 +77,21 @@ class DataRecorderPanel(Panel):
             "clicked", self.on_start_pause_rec_button_pressed
         )
         self.start_pause_rec_button.set_tooltip_text("start / pause track recording")
-        self.start_pause_rec_button.set_css_classes(["button"])
-        # self.start_pause_rec_button.set_css_classes(
-        #    ["recording_button", "recording_button:active", "recording_button:hover"]
-        # )
-        # self.start_pause_rec_button.set_child(self.start_rec_button_icon_inactive)
+        # self.start_pause_rec_button.set_css_classes(["button"])
+        self.start_pause_rec_button.set_css_classes(
+            ["recording_button", "recording_button:active", "recording_button:hover"]
+        )
+        self.start_pause_rec_button.set_child(self.start_rec_button_icon_inactive)
         self.icons_box.append(self.start_pause_rec_button)
 
         # stop button
         self.stop_rec_button = Gtk.Button(label="stop")
         self.stop_rec_button.connect("clicked", self.on_stop_rec_button_pressed)
-        self.stop_rec_button.set_css_classes(["button"])
-        # self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
-        # self.stop_rec_button.set_css_classes(
-        #    ["recording_button", "recording_button:active", "recording_button:hover"]
-        # )
+        # self.stop_rec_button.set_css_classes(["button"])
+        self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
+        self.stop_rec_button.set_css_classes(
+            ["recording_button", "recording_button:active", "recording_button:hover"]
+        )
         self.stop_rec_button.set_tooltip_text("stop track recording")
 
         self.icons_box.append(self.stop_rec_button)
@@ -179,8 +177,8 @@ class DataRecorderPanel(Panel):
 
         self.recording_details_info_box.append(self.recordings_details)
 
-        # reset button
-        self.delete_rec_button = Gtk.Button(label="reset")
+        # delete button
+        self.delete_rec_button = Gtk.Button(label="delete")
         self.delete_rec_button.connect(
             "clicked", self.on_delete_recording_button_pressed
         )
@@ -220,13 +218,13 @@ class DataRecorderPanel(Panel):
         rec = self.recorder.get_current_recording()
 
         if self.recorder.get_status() == DataRecorderStatus.RECORDING_PAUSED:
-            # self.start_pause_rec_button.set_child(self.pause_rec_button_icon)
-            self.start_pause_rec_button.set_label("pause")
+            self.start_pause_rec_button.set_child(self.pause_rec_button_icon)
+            # self.start_pause_rec_button.set_label("pause")
         else:
-            # self.start_pause_rec_button.set_child(self.start_rec_button_icon)
-            self.start_pause_rec_button.set_label("start")
+            self.start_pause_rec_button.set_child(self.start_rec_button_icon)
+            # self.start_pause_rec_button.set_label("start")
 
-        # self.stop_rec_button.set_child(self.stop_rec_button_icon)
+        self.stop_rec_button.set_child(self.stop_rec_button_icon)
 
         if rec != None:
             self.current_recording_name.set_label(rec.name)
@@ -239,8 +237,8 @@ class DataRecorderPanel(Panel):
         self.recorder.stop_recording()
         self.status_value.set_label(self.recorder.get_status_str())
 
-        # self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
-        # self.start_pause_rec_button.set_child(self.start_rec_button_icon_inactive)
+        self.stop_rec_button.set_child(self.stop_rec_button_icon_inactive)
+        self.start_pause_rec_button.set_child(self.start_rec_button_icon_inactive)
 
         rec = self.recorder.get_current_recording()
 
@@ -274,13 +272,24 @@ class DataRecorderPanel(Panel):
             self.logger.debug("delete recording confirmed: %s", repr(user_data))
 
             if self.selected_recording != None:
-                self.recordings_details.set_label(
-                    "\nDeleted recording\n" + self.selected_recording["name"] + "\n"
+                del_result = self.recorder.delete_recording_by_id(
+                    int(self.selected_recording["id"])
                 )
-                self.recorder.delete_recording_by_id(int(self.selected_recording["id"]))
-                self.recording_details_controls_box.set_visible(False)
+
+                if del_result == True:
+                    self.recordings_details.set_label(
+                        "\nDeleted recording\n" + self.selected_recording["name"] + "\n"
+                    )
+                else:
+                    self.recordings_details.set_label(
+                        "\nDeleting recording\n"
+                        + self.selected_recording["name"]
+                        + "\nfailed, because recording active."
+                    )
+
                 self.selected_recording = None
                 self.update_recordings_table()
+                self.recording_details_controls_box.set_visible(False)
         else:
             self.logger.debug("delete recording canceled.")
 
@@ -311,11 +320,6 @@ class DataRecorderPanel(Panel):
         recordings = self.recorder.get_recordings()
         self.recordings_table_box.remove_all()
 
-        # if len(recordings) == 0:
-        #    self.list_frame.set_visible(False)
-        # else:
-        #    self.list_frame.set_visible(True)
-        #
         for recording in recordings:
             recording_icon = Gtk.Picture()
             recording_icon.set_filename("gnss-ui/assets/map_icon.svg")
