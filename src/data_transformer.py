@@ -43,19 +43,24 @@ class DataTransformer:
                 trkseg, "trkpt", lat=str(data[i][1]), lon=str(data[i][2])
             )
 
-            ts = datetime.fromtimestamp(data[i][9])
+            ts = datetime.fromtimestamp(data[i][14])
             ts_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
             et.SubElement(trkpt, "time").text = ts_str
-            et.SubElement(trkpt, "ele").text = str(data[i][3])
-            #et.SubElement(trkpt, "sat").text = str(data[i][3])  ## TODO
-            #et.SubElement(trkpt, "geoidheight").text = str(data[i][3])  ## TODO
-            #et.SubElement(trkpt, "magvar").text = str(data[i][3])  ## TODO
-            #et.SubElement(trkpt, "fix").text = str(data[i][3])  ## TODO
+            et.SubElement(trkpt, "ele").text = str(data[i][3]) # altitude in meters
+            et.SubElement(trkpt, "sat").text = str(data[i][8]) # number of satelllites used to calc. position
+            et.SubElement(trkpt, "geoidheight").text = str(data[i][13])
+            et.SubElement(trkpt, "magvar").text = str(data[i][7])
+            
+            if data[i][12] == 2:
+                et.SubElement(trkpt, "fix").text = "2d" 
+            elif data[i][12] == 3:
+                et.SubElement(trkpt, "fix").text = "3d"
+                
             #et.SubElement(trkpt, "ageofdgpsdata").text = str(data[i][3])  ## TODO
 
-            et.SubElement(trkpt, "hdop").text = str(data[i][5])
-            et.SubElement(trkpt, "pdop").text = str(data[i][6])
-            et.SubElement(trkpt, "vdop").text = str(data[i][7])
+            et.SubElement(trkpt, "hdop").text = str(data[i][9])
+            et.SubElement(trkpt, "pdop").text = str(data[i][10])
+            et.SubElement(trkpt, "vdop").text = str(data[i][11])
 
         et.indent(gpx)
         # et.dump(gpx)

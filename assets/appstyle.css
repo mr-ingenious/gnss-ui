@@ -118,12 +118,13 @@
 .satellites_info_satellite_name {
     color: blue;
     font-weight: bold;
+    min-width: 50px;
     margin-left: 10px;
 }
 
 .satellites_info_panel {
     background-color: rgba(135, 206, 250, 0.7);
-    min-width: 340px;
+    min-width: 350px;
 }
 
 .satellites_info_label {
@@ -137,7 +138,7 @@
     color: black;
     border: 0px solid darkgray;
     background-color: rgba(255, 255, 255, 0);
-    min-width: 40px;
+    min-width: 45px;
 
     padding-top: 1px;
     padding-bottom: 1px;
