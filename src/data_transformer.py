@@ -43,17 +43,17 @@ class DataTransformer:
                 trkseg, "trkpt", lat=str(data[i][1]), lon=str(data[i][2])
             )
 
-            ts = datetime.fromtimestamp(data[i][14])
+            ts = datetime.fromtimestamp(data[i][18])
             ts_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
             et.SubElement(trkpt, "time").text = ts_str
             et.SubElement(trkpt, "ele").text = str(data[i][3]) # altitude in meters
             et.SubElement(trkpt, "sat").text = str(data[i][8]) # number of satelllites used to calc. position
-            et.SubElement(trkpt, "geoidheight").text = str(data[i][13])
+            et.SubElement(trkpt, "geoidheight").text = str(data[i][17])
             et.SubElement(trkpt, "magvar").text = str(data[i][7])
             
-            if data[i][12] == 2:
+            if data[i][16] == 2:
                 et.SubElement(trkpt, "fix").text = "2d" 
-            elif data[i][12] == 3:
+            elif data[i][16] == 3:
                 et.SubElement(trkpt, "fix").text = "3d"
                 
             #et.SubElement(trkpt, "ageofdgpsdata").text = str(data[i][3])  ## TODO

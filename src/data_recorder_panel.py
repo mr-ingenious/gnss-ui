@@ -330,7 +330,7 @@ class DataRecorderPanel(Panel):
             recording_box.set_css_classes("[recording_list_item]")
             recording_box.append(recording_icon)
 
-            ts = datetime.fromtimestamp(recording[4])
+            ts = datetime.fromtimestamp(recording[5])
             ts_str = ts.strftime("%Y-%m-%d %H:%M:%S")
 
             pos_count = self.recorder.get_position_data_count_by_id(recording[0])

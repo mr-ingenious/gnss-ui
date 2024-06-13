@@ -25,16 +25,17 @@ class RecordingInfo:
         self.name = ""
         self.description = ""
         self.type = ""
+        self.device = ""
         self.ts_start = 0
         self.ts_end = 0
 
 
 class DataRecorder:
-    def __init__(self, capture_interval=1, db_file="gnss_ui.db"):
+    def __init__(self, capture_interval=1.0, db_file="gnss_ui.db"):
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("recorder")
 
-        self.schema_version = "0.0.2"
+        self.schema_version = "0.0.3"
         self.db = db_file
 
         self.capture_interval = capture_interval
@@ -58,6 +59,7 @@ class DataRecorder:
                 self.current_recording.ts_start = time.time()
                 self.current_recording.ts_end = 0
                 self.current_recording.type = ""
+                self.current_recording.device = "/dev/ttyUSB1"
                 self.logger.info("recording '%s' started", self.current_recording.name)
                 self.current_recording.id = self.__add_recording_info(
                     self.current_recording
@@ -121,6 +123,12 @@ class DataRecorder:
         cursor = self.connection.cursor()
         try:
             cursor.execute("CREATE TABLE IF NOT EXISTS version (schema, ts)")
+
+            values = (self.schema_version, time.time())
+
+            cursor.execute("INSERT INTO version (schema, ts) VALUES (?,?)", values)
+            self.connection.commit()
+
         except sqlite3.OperationalError as e:
             self.logger.warn("version table: %s", str(e))
 
@@ -131,6 +139,7 @@ class DataRecorder:
                     name,
                     description,
                     type,
+                    device,
                     ts_start,
                     ts_end
                     ) """
@@ -146,13 +155,17 @@ class DataRecorder:
                     longitude,
                     altitude,
                     sog_kph,
-                    sog_kts,
                     cog_deg,
+                    mag_deg,
                     magvar_deg,
                     sat_in_use,
                     hdop,
                     pdop,
                     vdop,
+                    gdop,
+                    xdop,
+                    ydop,
+                    tdop,
                     gps_quality,
                     geoid_sep,
                     ts,
@@ -182,13 +195,14 @@ class DataRecorder:
 
     def __add_recording_info(self, rec_info):
         sql = """ INSERT INTO recordings
-                (name, description, type, ts_start, ts_end)
-                VALUES (?,?,?,?,?) """
+                (name, description, type, device, ts_start, ts_end)
+                VALUES (?,?,?,?,?,?) """
 
         values = (
             rec_info.name,
             rec_info.description,
             rec_info.type,
+            rec_info.device,
             rec_info.ts_start,
             rec_info.ts_end,
         )
@@ -200,13 +214,14 @@ class DataRecorder:
 
     def __update_recording_info(self, rec_info):
         sql = """ UPDATE recordings SET
-                name = ?, description = ? , type = ? , ts_start = ? , ts_end = ?
+                name = ?, description = ? , type = ? , device = ?, ts_start = ? , ts_end = ?
                 where id = ? """
 
         values = (
             rec_info.name,
             rec_info.description,
             rec_info.type,
+            rec_info.device,
             rec_info.ts_start,
             rec_info.ts_end,
             rec_info.id,
@@ -222,31 +237,39 @@ class DataRecorder:
                     longitude,
                     altitude,
                     sog_kph,
-                    sog_kts,
                     cog_deg,
+                    mag_deg,
                     magvar_deg,
                     sat_in_use,
                     hdop,
                     pdop,
                     vdop,
+                    gdop,
+                    xdop,
+                    ydop,
+                    tdop,
                     gps_quality,
                     geoid_sep,
                     ts,
                     recording_id
                     )
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) """
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) """
         values = (
             position["data"]["latitude"]["decimal"],
             position["data"]["longitude"]["decimal"],
             position["data"]["altitude"]["msl"],
             position["data"]["sog"]["kph"],
-            position["data"]["sog"]["kts"],
             position["data"]["cog"]["deg"],
+            position["data"]["cog"]["mag_deg"],
             position["data"]["cog"]["magvar_deg"],
             position["data"]["satellites_in_use"],
             position["data"]["dop"]["hdop"],
             position["data"]["dop"]["pdop"],
             position["data"]["dop"]["vdop"],
+            position["data"]["dop"]["gdop"],
+            position["data"]["dop"]["xdop"],
+            position["data"]["dop"]["ydop"],
+            position["data"]["dop"]["tdop"],
             position["data"]["gps_quality"]["indicator"],
             position["data"]["geoid_separation"],
             position["update_ts"],
@@ -315,8 +338,9 @@ class DataRecorder:
                 "name": recordings[0][1],
                 "description": recordings[0][2],
                 "type": recordings[0][3],
-                "ts_start": recordings[0][4],
-                "ts_end": recordings[0][5],
+                "device": recordings[0][4],
+                "ts_start": recordings[0][5],
+                "ts_end": recordings[0][6],
             }
 
         return recording
@@ -347,7 +371,28 @@ class DataRecorder:
         return True
 
     def get_position_data_by_id(self, id):
-        sql = """ SELECT * FROM position_records where recording_id = ? """
+        sql = """ SELECT
+                    id,
+                    latitude,
+                    longitude,
+                    altitude,
+                    sog_kph,
+                    cog_deg,
+                    mag_deg,
+                    magvar_deg,
+                    sat_in_use,
+                    hdop,
+                    pdop,
+                    vdop,
+                    gdop,
+                    xdop,
+                    ydop,
+                    tdop,
+                    gps_quality,
+                    geoid_sep,
+                    ts
+                FROM position_records
+                WHERE recording_id = ? """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
@@ -368,7 +413,17 @@ class DataRecorder:
         return cursor.fetchone()[0]
 
     def get_satellite_data_by_id(self, id):
-        sql = """ SELECT * FROM satellite_records where recording_id = ? """
+        sql = """
+                SELECT
+                    id,
+                    prn,
+                    azimuth,
+                    elevation,
+                    snr,
+                    used,
+                    ts,
+                FROM satellite_records
+                WHERE recording_id = ? """
 
         cursor = self.connection.cursor()
         cursor.execute(sql, (id,))
