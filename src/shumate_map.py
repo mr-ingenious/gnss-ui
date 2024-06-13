@@ -123,10 +123,8 @@ class ShumateMapPanel(Panel):
             selection_mode=Gtk.SelectionMode.SINGLE,
         )
 
-        self.track_layer = Shumate.MarkerLayer(
-            viewport=self.viewport,
-            selection_mode=Gtk.SelectionMode.SINGLE,
-        )
+        self.track_layer = Shumate.PathLayer(viewport=self.viewport)
+        self.track_layer.set_stroke_width(3)
 
         self.marker = Shumate.Marker()
         self.marker.set_location(self.last_latitude, self.last_longitude)
@@ -211,9 +209,15 @@ class ShumateMapPanel(Panel):
 
                 self.go_to_location(self.last_latitude, self.last_longitude)
 
-                self.track_points.append((self.last_latitude, self.last_longitude))
-                if len(self.track_points) > 100:
-                    self.track_points.pop(0)
+                coord = Shumate.Coordinate()
+                coord.set_location(self.last_latitude, self.last_longitude)
+
+                self.track_points.append(coord)
+                self.track_layer.add_node(coord)
+
+                if len(self.track_points) > 60:  # show the last 60 seconds ...
+                    coord_to_delete = self.track_points.pop(0)
+                    self.track_layer.remove_node(coord_to_delete)
 
             else:
                 if self.is_valid_location == False:
