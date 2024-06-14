@@ -14,6 +14,8 @@ from gi.repository import Gtk, Gio, GLib
 from data_recorder import DataRecorder, DataRecorderStatus
 from data_transformer import DataTransformer
 
+from recording_map import RecordingMapWindow
+
 from datetime import datetime
 
 
@@ -26,6 +28,8 @@ class DataRecorderPanel(Panel):
         self.dialog = None
         self.recorder = recorder
         self.export_directory = export_directory
+
+        self.last_list_selected_ts = 0
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("recorder")
@@ -51,7 +55,9 @@ class DataRecorderPanel(Panel):
         )
 
         self.pause_rec_button_icon = Gtk.Picture()
-        self.pause_rec_button_icon.set_filename("gnss-ui/assets/pause_recording_icon.svg")
+        self.pause_rec_button_icon.set_filename(
+            "gnss-ui/assets/pause_recording_icon.svg"
+        )
 
         self.stop_rec_button_icon = Gtk.Picture()
         self.stop_rec_button_icon.set_filename("gnss-ui/assets/stop_recording_icon.svg")
@@ -203,6 +209,17 @@ class DataRecorderPanel(Panel):
         self.export_rec_button.set_child(self.export_rec_button_icon)
         self.recording_details_controls_box.append(self.export_rec_button)
 
+        # show map button
+        self.show_map_button = Gtk.Button(label="show")
+        self.show_map_button.connect("clicked", self.on_show_map_button_pressed)
+        self.show_map_button.set_tooltip_text("show track")
+
+        self.show_map_button.set_css_classes(
+            ["recording_button", "recording_button:active", "recording_button:hover"]
+        )
+        # self.show_map_button.set_child(self.export_rec_button_icon)
+        self.recording_details_controls_box.append(self.show_map_button)
+
         self.recording_details_box.append(self.recording_details_info_box)
         self.recording_details_box.append(self.recording_details_controls_box)
 
@@ -316,6 +333,18 @@ class DataRecorderPanel(Panel):
         else:
             self.recordings_details.set_label("\nNo export.\n")
 
+    def on_show_map_button_pressed(self, button):
+        self.logger.debug("[show recording]")
+
+        if self.selected_recording != None:
+            position_data = self.recorder.get_position_data_by_id(
+                int(self.selected_recording["id"])
+            )
+
+            if len(position_data) > 0:
+                dialog = RecordingMapWindow(self.selected_recording, position_data)
+                dialog.set_visible(True)
+
     def update_recordings_table(self):
         recordings = self.recorder.get_recordings()
         self.recordings_table_box.remove_all()
@@ -354,10 +383,18 @@ class DataRecorderPanel(Panel):
             self.logger.debug(
                 "recordings list row selected: " + repr(data.get_child().get_name())
             )
+
+            last_selected_recording = self.selected_recording
             self.selected_recording = self.recorder.get_recording_by_id(
                 int(data.get_child().get_name())
             )
             self.logger.debug("selected recording: %s", repr(self.selected_recording))
+
+            if (
+                time.time() - self.last_list_selected_ts < 1.5
+                and last_selected_recording["id"] == self.selected_recording["id"]
+            ):
+                self.on_show_map_button_pressed(None)
 
             ts = datetime.fromtimestamp(self.selected_recording["ts_start"])
             ts_start_str = ts.strftime("%Y-%m-%d %H:%M:%S")
@@ -374,6 +411,8 @@ class DataRecorderPanel(Panel):
                 + "\nend: "
                 + ts_end_str
             )
+
+        self.last_list_selected_ts = time.time()
 
     def update(self):
         pass  # self.update_recordings_table()

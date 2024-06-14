@@ -26,8 +26,8 @@ class RecordingInfo:
         self.description = ""
         self.type = ""
         self.device = ""
-        self.ts_start = 0
-        self.ts_end = 0
+        self.ts_start = 0.0
+        self.ts_end = 0.0
 
 
 class DataRecorder:
