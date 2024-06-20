@@ -66,9 +66,9 @@ class SatellitesInfoPanel(Panel):
 
         satellite_icon = Gtk.Picture()
         if sat["used"]:
-            satellite_icon.set_filename("gnss-ui/assets/satellite_icon_used.svg")
+            satellite_icon.set_filename("gnss-ui/assets/satellite_icon2_used.svg")
         else:
-            satellite_icon.set_filename("gnss-ui/assets/satellite_icon.svg")
+            satellite_icon.set_filename("gnss-ui/assets/satellite_icon2.svg")
 
         satellite_box.set_name(satellite_name)
         satellite_box.append(satellite_icon)
@@ -150,6 +150,9 @@ class SatellitesInfoPanel(Panel):
             return False
 
     def update(self, position_info, sat_info):
+        self.__update_internal2(position_info=position_info, sat_info=sat_info)
+
+    def __update_internal1(self, position_info, sat_info):
         if self.get_visible() and time.time() - self.last_update > 1:
             self.satellites_summary.set_label(
                 "# Satellites: "
@@ -186,5 +189,37 @@ class SatellitesInfoPanel(Panel):
                     self.logger.debug("sat list: remove %s", k)
                     self.update_row(self.satellites_shown.get(k), True)
                     self.satellites_shown.pop(k)
+
+            self.last_update = time.time()
+
+    def __update_internal2(self, position_info, sat_info):
+        if self.get_visible() and time.time() - self.last_update > 1:
+            self.satellites_summary.set_label(
+                "# Satellites: "
+                + str(len(sat_info["data"].keys()))
+                + " (in use:"
+                + str(position_info["data"]["satellites_in_use"])
+                + ")"
+            )
+
+            # self.satellites_list.insert(self.build_list_item(sat), row_idx)
+
+            self.satellites_list.remove_all()
+
+            sat_dict = sat_info["data"]
+
+            for sat in sorted(
+                sat_dict.keys(),
+                key=lambda x: (
+                    sat_dict[x]["used"],
+                    sat_dict[x]["snr"],
+                    sat_dict[x]["system"],
+                ),
+                reverse=True,
+            ):
+                self.logger.debug("--- satellite %s", sat)
+                self.satellites_list.insert(
+                    self.build_list_item(sat_info["data"][sat]), -1
+                )
 
             self.last_update = time.time()

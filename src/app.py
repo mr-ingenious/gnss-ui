@@ -15,6 +15,8 @@ from gnss_info_panel import GnssInfoPanel
 from satellites_info_panel import SatellitesInfoPanel
 from satellites_graphic_panel import SatellitesGraphicPanel
 
+from compass_panel import CompassPanel
+
 from preferences_dialog2 import PreferencesDialog
 
 from data_recorder import DataRecorder, DataRecorderStatus
@@ -46,7 +48,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.8.0"
+APP_VERSION = "0.8.1"
 
 
 class PanelRefresher(threading.Thread):
@@ -161,6 +163,9 @@ class MainWindow(Gtk.ApplicationWindow):
             show_position_dashboard=self.config.get_param(
                 "map_panel/show_position_dashboard", True
             ),
+            show_compass_dashboard=self.config.get_param(
+                "map_panel/show_compass_dashboard", True
+            ),
             start_latitude=self.config.get_param("map_panel/start_latitude", 0.0),
             start_longitude=self.config.get_param("map_panel/start_longitude", 0.0),
             recorder=None,
@@ -172,6 +177,15 @@ class MainWindow(Gtk.ApplicationWindow):
             self.map_panel.set_visible(False)
         self.main_box.append(self.map_panel)
 
+        # Compass Panel
+        self.compass_panel = CompassPanel()
+        if "compass" in self.config.get_param("startup/panels_shown"):
+            self.compass_panel.set_visible(True)
+        else:
+            self.compass_panel.set_visible(False)
+        self.main_box.append(self.compass_panel)
+
+        # Recorder Panel
         self.recorder_panel = DataRecorderPanel(
             recorder=self.recorder,
             main_window=self,
@@ -191,6 +205,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self.satellites_radar_panel,
             self.map_panel,
             self.recorder_panel,
+            self.compass_panel,
         )
         self.overlay_root_box.append(self.left_menu_panel)
         self.overlay_root_box.append(self.scrolled_main_box)
@@ -259,12 +274,13 @@ class MainWindow(Gtk.ApplicationWindow):
         self.map_panel.update(self.data.position, self.data.satellites)
         self.gnss_info_panel.update(self.data.position)
         self.recorder_panel.update()
+        self.compass_panel.update(self.data.position)
 
     def updateJSON(self, jobject):
         self.data.updateJSON(jobject)
         self.received_json_message_ct += 1
         GLib.idle_add(self.update_statusbar)
-        
+
         if self.data != None:
             self.recorder.update(self.data)
 

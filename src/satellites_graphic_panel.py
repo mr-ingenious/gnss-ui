@@ -29,8 +29,8 @@ class SatellitesGraphicPanel(Panel):
 
         if self.is_dashboard:
             self.set_css_classes(["map_dashboard", "satellites_dashboard"])
-            self.drawing_area.set_content_height(200)
-            self.drawing_area.set_content_width(200)
+            self.drawing_area.set_content_height(150)
+            self.drawing_area.set_content_width(150)
         else:
             self.panel_label = Gtk.Label(label="Satellites Radar")
             self.panel_label.set_css_classes(["panel_title"])
@@ -126,13 +126,13 @@ class SatellitesGraphicPanel(Panel):
                 continue
 
             if value["system"] == "GP":
-                context.set_source_rgb(0.5, 0.0, 0.2)
+                context.set_source_rgb(0.8, 0.0, 0.2)
             elif value["system"] == "GA":
-                context.set_source_rgb(0.2, 0.5, 0.0)
+                context.set_source_rgb(0.2, 0.9, 0.0)
             elif value["system"] == "PQ":
-                context.set_source_rgb(0.0, 0.2, 0.5)
+                context.set_source_rgb(0.0, 0.2, 0.8)
             elif value["system"] == "GL":
-                context.set_source_rgb(0.7, 0.5, 0.0)
+                context.set_source_rgb(0.8, 0.8, 0.2)
             elif value["system"] == "GN":
                 context.set_source_rgb(0.0, 0.7, 0.5)
             else:

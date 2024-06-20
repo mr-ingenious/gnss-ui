@@ -82,6 +82,17 @@
     padding-right: 3px;
 }
 
+.compass_value {
+    font-size: 15px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(0, 0, 0, 0.3);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
 .button {
     margin-top: 4px;
     margin-bottom: 4px;
@@ -149,7 +160,11 @@
 }
 
 .satellites_graphic_panel {
-    background-color: rgba(135, 206, 250, 0.7);
+    background-color: rgba(85, 130, 158, 0.7);
+}
+
+.compass_panel {
+    background-color: rgba(134, 100, 72, 0.7);
 }
 
 .map_dashboard {
@@ -188,6 +203,11 @@
 .satellites_dashboard {
     margin-left: 5px;
     margin-bottom: 65px;
+}
+
+.compass_dashboard {
+    margin-left: 5px;
+    margin-bottom: 230px;
 }
 
 .position_dashboard {

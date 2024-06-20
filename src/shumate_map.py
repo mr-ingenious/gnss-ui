@@ -16,6 +16,7 @@ from gi.repository import Gtk, Shumate
 from position_info_panel import PositionInfoPanel
 from satellites_graphic_panel import SatellitesGraphicPanel
 from data_recorder_dashboard import DataRecorderDashboard
+from compass_panel import CompassPanel
 
 # Code inspired by GNOME Workbench
 
@@ -30,6 +31,7 @@ class ShumateMapPanel(Panel):
         initial_zoom_level=10,
         show_satellites_radar_dashboard=True,
         show_position_dashboard=True,
+        show_compass_dashboard=True,
         recorder=None,
         export_directory="./",
     ):
@@ -66,6 +68,12 @@ class ShumateMapPanel(Panel):
         self.satellites_radar_dashboard.set_halign(Gtk.Align.START)
         self.satellites_radar_dashboard.set_valign(Gtk.Align.END)
         self.satellites_radar_dashboard.set_visible(show_satellites_radar_dashboard)
+
+        # Compass Dashboard
+        self.compass_dashboard = CompassPanel(as_dashboard=True)
+        self.compass_dashboard.set_halign(Gtk.Align.START)
+        self.compass_dashboard.set_valign(Gtk.Align.END)
+        self.compass_dashboard.set_visible(show_compass_dashboard)
 
         # Recorder Control
         self.recorder_dashboard = None
@@ -141,7 +149,8 @@ class ShumateMapPanel(Panel):
         self.overlay.set_child(self.map_widget)
         self.overlay.add_overlay(self.position_dashboard)
         self.overlay.add_overlay(self.satellites_radar_dashboard)
-
+        self.overlay.add_overlay(self.compass_dashboard)
+        
         if self.recorder_dashboard != None:
             self.overlay.add_overlay(self.recorder_dashboard)
 
@@ -192,9 +201,10 @@ class ShumateMapPanel(Panel):
         self.marker.set_location(latitude, longitude)
 
     def update(self, position_info, satellites_info):
-        if self.get_visible():
+        if True:  # self.get_visible():
             self.position_dashboard.update(position_info)
             self.satellites_radar_dashboard.update(satellites_info)
+            self.compass_dashboard.update(position_info)
 
             if (
                 position_info["data"]["latitude"]["decimal"] != 0.0

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<svg height="30" width="30" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="15,5,   5,15, 20,30, 30,20" stroke="#575757" stroke-width="3" fill="#aaaaaa" />
+    <polygon points="46,55, 56,46, 40,30, 30,40" stroke="#575757" stroke-width="3" fill="#aaaaaa" />
+    <polygon points="17,33, 36,14, 46,24, 27,43" stroke="#575757" stroke-width="3" fill="#575757" />
+
+    <polygon points="8,33, 28,53" stroke="#575757" stroke-width="3" fill="none" />
+    <polygon points="6,42, 18,54" stroke="#575757" stroke-width="3" fill="none" />
+</svg>
