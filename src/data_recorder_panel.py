@@ -15,6 +15,7 @@ from data_recorder import DataRecorder, DataRecorderStatus
 from data_transformer import DataTransformer
 
 from recording_map import RecordingMapWindow
+from plot_window import PlotWindow
 
 from datetime import datetime
 
@@ -210,15 +211,26 @@ class DataRecorderPanel(Panel):
         self.recording_details_controls_box.append(self.export_rec_button)
 
         # show map button
-        self.show_map_button = Gtk.Button(label="show")
+        self.show_map_button = Gtk.Button(label="map")
         self.show_map_button.connect("clicked", self.on_show_map_button_pressed)
-        self.show_map_button.set_tooltip_text("show track")
+        self.show_map_button.set_tooltip_text("show track on map")
 
         self.show_map_button.set_css_classes(
             ["recording_button", "recording_button:active", "recording_button:hover"]
         )
         # self.show_map_button.set_child(self.export_rec_button_icon)
         self.recording_details_controls_box.append(self.show_map_button)
+
+        # show plot button
+        self.show_plot_button = Gtk.Button(label="plot")
+        self.show_plot_button.connect("clicked", self.on_show_plot_button_pressed)
+        self.show_plot_button.set_tooltip_text("show plots")
+
+        self.show_plot_button.set_css_classes(
+            ["recording_button", "recording_button:active", "recording_button:hover"]
+        )
+        # self.show_map_button.set_child(self.export_rec_button_icon)
+        self.recording_details_controls_box.append(self.show_plot_button)
 
         self.recording_details_box.append(self.recording_details_info_box)
         self.recording_details_box.append(self.recording_details_controls_box)
@@ -334,7 +346,7 @@ class DataRecorderPanel(Panel):
             self.recordings_details.set_label("\nNo export.\n")
 
     def on_show_map_button_pressed(self, button):
-        self.logger.debug("[show recording]")
+        self.logger.debug("[show map]")
 
         if self.selected_recording != None:
             position_data = self.recorder.get_position_data_by_id(
@@ -343,6 +355,24 @@ class DataRecorderPanel(Panel):
 
             if len(position_data) > 0:
                 dialog = RecordingMapWindow(self.selected_recording, position_data)
+                dialog.set_visible(True)
+
+    def on_show_plot_button_pressed(self, button):
+        self.logger.debug("[show plot]")
+
+        if self.selected_recording != None:
+            position_data = self.recorder.get_position_data_by_id(
+                int(self.selected_recording["id"])
+            )
+
+            satellites_data = self.recorder.get_satellite_data_by_id(
+                int(self.selected_recording["id"])
+            )
+
+            if len(position_data) > 0:
+                dialog = PlotWindow(
+                    self.selected_recording, position_data, satellites_data
+                )
                 dialog.set_visible(True)
 
     def update_recordings_table(self):

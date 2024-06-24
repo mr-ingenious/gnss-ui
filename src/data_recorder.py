@@ -421,7 +421,7 @@ class DataRecorder:
                     elevation,
                     snr,
                     used,
-                    ts,
+                    ts
                 FROM satellite_records
                 WHERE recording_id = ? """
 
