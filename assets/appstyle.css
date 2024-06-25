@@ -368,6 +368,8 @@
     background-color: rgba(0, 0, 0, 0.65);
     border-radius: 5px;
     padding: 5px;
+    margin-left: 10px;
+    margin-top: 10px;   
 }
 
 .plot_info_label {
@@ -385,4 +387,13 @@
     padding-left: 3px;
     padding-right: 3px;
     margin: 0px;
+}
+
+.plot_controls {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.65);
+    border-radius: 5px;
+    padding: 5px;
+    margin-right: 15px;
+    margin-top: 15px;   
 }

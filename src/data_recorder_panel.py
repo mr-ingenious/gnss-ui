@@ -177,6 +177,9 @@ class DataRecorderPanel(Panel):
         self.recording_details_controls_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL
         )
+        self.recording_details_controls_box2 = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL
+        )
         self.recording_details_info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
         self.recordings_details = Gtk.Label(label="")
@@ -219,7 +222,7 @@ class DataRecorderPanel(Panel):
             ["recording_button", "recording_button:active", "recording_button:hover"]
         )
         # self.show_map_button.set_child(self.export_rec_button_icon)
-        self.recording_details_controls_box.append(self.show_map_button)
+        self.recording_details_controls_box2.append(self.show_map_button)
 
         # show plot button
         self.show_plot_button = Gtk.Button(label="plot")
@@ -230,11 +233,12 @@ class DataRecorderPanel(Panel):
             ["recording_button", "recording_button:active", "recording_button:hover"]
         )
         # self.show_map_button.set_child(self.export_rec_button_icon)
-        self.recording_details_controls_box.append(self.show_plot_button)
+        self.recording_details_controls_box2.append(self.show_plot_button)
 
         self.recording_details_box.append(self.recording_details_info_box)
         self.recording_details_box.append(self.recording_details_controls_box)
-
+        self.recording_details_box.append(self.recording_details_controls_box2)
+        
         self.recording_details_frame.set_visible(False)
 
         self.append(self.recording_details_frame)

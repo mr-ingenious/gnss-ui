@@ -44,6 +44,8 @@ class PlotWindow(Gtk.Window):
         self.position_data = position_data
         self.satellites_data = satellites_data
 
+        self.bin_size = 1  # data bin size in seconds
+
         self.set_title(recording_info["name"])
 
         self.y_offset = 50
@@ -65,6 +67,7 @@ class PlotWindow(Gtk.Window):
         self.overlay_box.set_vexpand(True)
 
         self.scrolled_window = Gtk.ScrolledWindow()
+        self.scrolled_window.set_css_classes(["panel"])
         self.drawing_area = Gtk.DrawingArea()
         self.drawing_area.set_content_height(700)
         self.drawing_area.set_content_width(len(position_data) + 100)
@@ -75,7 +78,7 @@ class PlotWindow(Gtk.Window):
 
         # INFOBOX
         self.info_box = Gtk.Box()
-        self.info_box.set_css_classes(["plot_info"])
+        self.info_box.set_css_classes(["panel", "plot_info"])
 
         self.overlay_box.add_overlay(self.info_box)
 
@@ -94,6 +97,7 @@ class PlotWindow(Gtk.Window):
         self.info_grid.insert_column(1)
 
         self.controls_box = Gtk.Box()
+        self.controls_box.set_css_classes(["plot_controls"])
         self.data_selection = Gtk.DropDown()
         self.select_items = Gtk.StringList()
 
@@ -102,7 +106,9 @@ class PlotWindow(Gtk.Window):
 
         self.data_selection.set_model(self.select_items)
         self.data_selection.set_selected(self.selected_datatype)
-        self.data_selection.connect("notify::selected-item", self.on_selected_datatype)
+        self.data_selection.connect(
+            "notify::selected-item", self.__on_selected_datatype
+        )
 
         self.controls_box.append(self.data_selection)
         self.overlay_box.add_overlay(self.controls_box)
@@ -112,6 +118,20 @@ class PlotWindow(Gtk.Window):
 
         self.controls_box.set_halign(Gtk.Align.END)
         self.controls_box.set_valign(Gtk.Align.START)
+
+        # Zoom in button
+        self.x_zoom_in_button = Gtk.Button(label="zoom in")
+        self.x_zoom_in_button.connect("clicked", self.__on_x_zoom_in_button_pressed)
+        self.x_zoom_in_button.set_css_classes(["button"])
+
+        self.controls_box.append(self.x_zoom_in_button)
+
+        # Zoom out button
+        self.x_zoom_out_button = Gtk.Button(label="zoom out")
+        self.x_zoom_out_button.connect("clicked", self.__on_x_zoom_out_button_pressed)
+        self.x_zoom_out_button.set_css_classes(["button"])
+
+        self.controls_box.append(self.x_zoom_out_button)
 
         # name
         name_label = Gtk.Label(label="Name: ")
@@ -168,60 +188,64 @@ class PlotWindow(Gtk.Window):
     def draw(self, area, context, width, height, user_data):
         self.logger.debug("draw: width=%i, height=%i", width, height)
 
-        context.set_source_rgb(0.8, 0.8, 0.8)
+        context.set_source_rgb(0.9, 0.9, 0.9)
         context.paint()
 
-        self.draw_plot_axes(context=context, width=width, height=height)
+        metadata = self.__get_data_metadata(
+            data=self.position_data, idx=self.selected_datatype + 1
+        )
 
-        self.draw_data(
+        self.drawing_area.set_content_width(metadata["bins"] + 100)
+
+        self.__draw_plot_axes(
+            context=context, width=width, height=height, metadata=metadata
+        )
+
+        self.__draw_data(
             context=context,
             width=width,
             height=height,
             data=self.position_data,
             idx=self.selected_datatype + 1,
+            metadata=metadata,
             label=self.fields[self.selected_datatype],
-            colors=[0.5, 0.2, 0.2],
+            colors=[0.3, 0.3, 0.3],
         )
 
-    def draw_plot_axes(self, context, width, height):
+    def __draw_plot_axes(self, context, width, height, metadata):
         context.set_source_rgb(0.1, 0.1, 0.1)
 
+        # x axis
         context.move_to(self.x_offset, height - self.y_offset)
-        context.line_to(width - 40, height - self.y_offset)
+        context.line_to(metadata["bins"] + 50, height - self.y_offset)
         context.stroke()
 
+        # y axis
         context.move_to(self.x_offset, 160)
         context.line_to(self.x_offset, height - self.y_offset)
         context.stroke()
 
-        for x in range(self.x_offset, width - 40):
-            if (x - self.x_offset) % 60 == 0:
+        # x ticks
+        for x in range(self.x_offset, metadata["bins"] + 50):
+            if (x - self.x_offset) % int(60 / self.bin_size) == 0:
                 context.move_to(x, height - self.y_offset)
                 context.line_to(x, height - self.y_offset - 5)
                 context.stroke()
 
-            if (x - self.x_offset) % 300 == 0:
+            if (x - self.x_offset) % int(300 / self.bin_size) == 0:
                 context.move_to(x, height - self.y_offset)
                 context.line_to(x, height - self.y_offset + 10)
                 context.stroke()
                 context.move_to(x, height - self.y_offset + 20)
-                context.show_text("+" + str((x - self.x_offset) / 60) + "min")
+                context.show_text(
+                    "+"
+                    + "{:.0f}".format((x - self.x_offset) / int(60 / self.bin_size))
+                    + "min"
+                )
 
-    def draw_data(
-        self, context, width, height, data, idx, label="", colors=[0.1, 0.1, 0.1]
-    ):
-        context.set_source_rgb(colors[0], colors[1], colors[2])
+        context.set_source_rgb(0.3, 0.0, 0.0)
 
-        min = 0.0
-        max = 0.0
-        t_start = data[0][18]
-        t_end = data[len(data) - 1][18]
-        t_diff = t_end - t_start
-
-        context.select_font_face("Sans")
-        context.set_font_size(10)
-
-        ts = datetime.fromtimestamp(t_start)
+        ts = datetime.fromtimestamp(metadata["t_start"])
         ts_str = ts.strftime("%Y-%m-%d")
         context.move_to(self.x_offset, height - self.y_offset + 30)
         context.show_text(str(ts_str))
@@ -230,45 +254,164 @@ class PlotWindow(Gtk.Window):
         context.move_to(self.x_offset, height - self.y_offset + 40)
         context.show_text(str(ts_str))
 
-        ts = datetime.fromtimestamp(t_end)
+        ts = datetime.fromtimestamp(metadata["t_end"])
         ts_str = ts.strftime("%Y-%m-%d")
-        context.move_to(width - 120, height - self.y_offset + 30)
+        context.move_to(metadata["bins"], height - self.y_offset + 30)
         context.show_text(str(ts_str))
 
         ts_str = ts.strftime("%H:%M:%S")
-        context.move_to(width - 120, height - self.y_offset + 40)
+        context.move_to(metadata["bins"], height - self.y_offset + 40)
         context.show_text(str(ts_str))
 
+    def __get_data_metadata(self, data, idx):
+        min = 0.0
+        min_idx = 0
+        max = 0.0
+        max_idx = 0
+
+        t_start = data[0][18]
+        t_end = data[len(data) - 1][18]
+        t_diff = t_end - t_start
+
+        i = 0
         for s in data:
             if s[idx] < min:
                 min = s[idx]
+                min_idx = i
 
             if s[idx] > max:
                 max = s[idx]
+                max_idx = i
 
-        self.logger.info("%s: length %.2f, min: %f, max: %f", label, t_diff, min, max)
+            i = i + 1
 
-        x = self.x_offset
-        last = [x, height - self.y_offset]
-        for s in data:
-            y = height - self.y_offset - ((s[idx] / max) * (height - 200))
-            context.move_to(last[0], last[1])
-            context.line_to(x, y + 1)
-            context.stroke()
+        num_bins = int(t_diff / self.bin_size)
 
-            x = x + 1
+        self.logger.debug(
+            "length %.2f secs, min: %.2f, max: %.2f, bin_size: %i, bins: %i",
+            t_diff,
+            min,
+            max,
+            self.bin_size,
+            num_bins,
+        )
 
-            last = [x, y]
+        return {
+            "min": {"value": min, "idx": min_idx},
+            "max": {"value": max, "idx": max_idx},
+            "t_start": t_start,
+            "t_end": t_end,
+            "t_diff": t_diff,
+            "bins": num_bins,
+        }
 
-            if x > width - 40:
-                break
+    def __draw_data(
+        self,
+        context,
+        width,
+        height,
+        data,
+        idx,
+        metadata,
+        label="",
+        colors=[0.1, 0.1, 0.1],
+    ):
+        context.set_source_rgb(colors[0], colors[1], colors[2])
 
-    def on_selected_datatype(self, drop_down, selected_item):
+        context.select_font_face("Sans")
+        context.set_font_size(10)
+
+        if metadata["max"]["value"] != 0.0:
+            bin_val_idx = 0
+            bin_mean_val = 0.0
+            bin_min_val = 1e+100
+            bin_max_val = 0.0
+
+            bins = list()
+
+            for s in data:
+                bin_val_idx = bin_val_idx + 1
+                bin_mean_val = bin_mean_val + s[idx]
+
+                if s[idx] < bin_min_val:
+                    bin_min_val = s[idx]
+
+                if s[idx] > bin_max_val:
+                    bin_max_val = s[idx]
+
+                if bin_val_idx == self.bin_size:
+                    bins.append(
+                        {
+                            "mean": bin_mean_val / self.bin_size,
+                            "min": bin_min_val,
+                            "max": bin_max_val,
+                        }
+                    )
+                    bin_mean_val = 0.0
+                    bin_val_idx = 0
+                    bin_min_val = 1e+100
+                    bin_max_val = 0.0
+
+            x = self.x_offset
+            last = [x, height - self.y_offset]
+            for s in bins:
+                if self.bin_size > 1:
+                    context.set_source_rgb(0.9, 0.5, 0.5)
+                    self.logger.info("[%f,%f]", s["min"], s["max"])
+                    y_min = (
+                        height
+                        - self.y_offset
+                        - ((s["min"] / metadata["max"]["value"]) * (height - 200))
+                    )
+
+                    y_max = (
+                        height
+                        - self.y_offset
+                        - ((s["max"] / metadata["max"]["value"]) * (height - 200))
+                    )
+                    context.move_to(x, y_min)
+                    context.line_to(x, y_max)
+                    context.stroke()
+
+                    context.set_source_rgb(colors[0], colors[1], colors[2])
+
+                y = (
+                    height
+                    - self.y_offset
+                    - ((s["mean"] / metadata["max"]["value"]) * (height - 200))
+                )
+                context.move_to(last[0], last[1])
+                context.line_to(x, y + 1)
+                context.stroke()
+
+                x = x + 1
+
+                last = [x, y]
+
+                if x > width - 40:
+                    break
+
+    def __on_selected_datatype(self, drop_down, selected_item):
         self.selected_datatype = self.data_selection.get_selected()
-        
-        self.logger.info(
-            "another datatype selected: %s",
+
+        self.logger.debug(
+            "another datatype selected: <%s>",
             self.fields[self.selected_datatype],
         )
-        
+
+        self.drawing_area.queue_draw()
+
+    def __on_x_zoom_in_button_pressed(self, button):
+        self.logger.debug("[zoom in] pressed")
+        if self.bin_size >= 2:
+            self.bin_size = self.bin_size - 1
+
+        self.drawing_area.queue_draw()
+
+    def __on_x_zoom_out_button_pressed(self, button):
+        self.logger.debug("[zoom out] pressed")
+
+        if self.bin_size < 5:
+            self.bin_size = self.bin_size + 1
+
         self.drawing_area.queue_draw()
