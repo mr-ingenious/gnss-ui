@@ -49,7 +49,7 @@ class PlotWindow(Gtk.Window):
         self.set_title(recording_info["name"])
 
         self.y_offset = 50
-        self.x_offset = 40
+        self.x_offset = 70
 
         self.set_default_size(
             1024,
@@ -188,7 +188,7 @@ class PlotWindow(Gtk.Window):
     def draw(self, area, context, width, height, user_data):
         self.logger.debug("draw: width=%i, height=%i", width, height)
 
-        context.set_source_rgb(0.9, 0.9, 0.9)
+        context.set_source_rgb(1.0, 1.0, 1.0)
         context.paint()
 
         metadata = self.__get_data_metadata(
@@ -209,7 +209,7 @@ class PlotWindow(Gtk.Window):
             idx=self.selected_datatype + 1,
             metadata=metadata,
             label=self.fields[self.selected_datatype],
-            colors=[0.3, 0.3, 0.3],
+            colors=[0.3, 0.3, 0.7],
         )
 
     def __draw_plot_axes(self, context, width, height, metadata):
@@ -225,7 +225,7 @@ class PlotWindow(Gtk.Window):
         context.line_to(self.x_offset, height - self.y_offset)
         context.stroke()
 
-        # x ticks
+        # x axis tickscontext.move_to(metadata["bins"], height - self.y_offset + 30)
         for x in range(self.x_offset, metadata["bins"] + 50):
             if (x - self.x_offset) % int(60 / self.bin_size) == 0:
                 context.move_to(x, height - self.y_offset)
@@ -254,14 +254,37 @@ class PlotWindow(Gtk.Window):
         context.move_to(self.x_offset, height - self.y_offset + 40)
         context.show_text(str(ts_str))
 
+        x = metadata["bins"]
+
+        if x < 120:
+            x = 120
         ts = datetime.fromtimestamp(metadata["t_end"])
         ts_str = ts.strftime("%Y-%m-%d")
-        context.move_to(metadata["bins"], height - self.y_offset + 30)
+        context.move_to(x, height - self.y_offset + 30)
         context.show_text(str(ts_str))
 
         ts_str = ts.strftime("%H:%M:%S")
-        context.move_to(metadata["bins"], height - self.y_offset + 40)
+        context.move_to(x, height - self.y_offset + 40)
         context.show_text(str(ts_str))
+
+        # y axis ticks
+        context.move_to(10, 160 - 10)
+        context.show_text(str(metadata["max"]["value"]))
+
+        dist_per_tick = metadata["max"]["value"] / 10
+
+        for i in range(0, 10):
+            y = (
+                height
+                - self.y_offset
+                - (((i * dist_per_tick) / metadata["max"]["value"]) * (height - 200))
+            )
+            context.move_to(self.x_offset - 5, y)
+            context.line_to(self.x_offset, y)
+            context.stroke()
+
+            context.move_to(10, y)
+            context.show_text("{:.2f}".format(i * dist_per_tick))
 
     def __get_data_metadata(self, data, idx):
         min = 0.0
@@ -324,7 +347,7 @@ class PlotWindow(Gtk.Window):
         if metadata["max"]["value"] != 0.0:
             bin_val_idx = 0
             bin_mean_val = 0.0
-            bin_min_val = 1e+100
+            bin_min_val = 1e100
             bin_max_val = 0.0
 
             bins = list()
@@ -349,7 +372,7 @@ class PlotWindow(Gtk.Window):
                     )
                     bin_mean_val = 0.0
                     bin_val_idx = 0
-                    bin_min_val = 1e+100
+                    bin_min_val = 1e100
                     bin_max_val = 0.0
 
             x = self.x_offset
@@ -357,7 +380,6 @@ class PlotWindow(Gtk.Window):
             for s in bins:
                 if self.bin_size > 1:
                     context.set_source_rgb(0.9, 0.5, 0.5)
-                    self.logger.info("[%f,%f]", s["min"], s["max"])
                     y_min = (
                         height
                         - self.y_offset

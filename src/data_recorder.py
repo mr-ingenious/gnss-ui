@@ -126,7 +126,7 @@ class DataRecorder:
 
             values = (self.schema_version, time.time())
 
-            cursor.execute("INSERT INTO version (schema, ts) VALUES (?,?)", values)
+            # cursor.execute("INSERT INTO version (schema, ts) VALUES (?,?)", values)
             self.connection.commit()
 
         except sqlite3.OperationalError as e:
