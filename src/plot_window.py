@@ -49,7 +49,6 @@ class PlotWindow(Gtk.Window):
         self.set_title(recording_info["name"])
 
         self.y_offset = 50
-        self.x_offset = 70
 
         self.set_default_size(
             1024,
@@ -67,14 +66,29 @@ class PlotWindow(Gtk.Window):
         self.overlay_box.set_vexpand(True)
 
         self.scrolled_window = Gtk.ScrolledWindow()
-        self.scrolled_window.set_css_classes(["panel"])
+        self.scrolled_window.set_hexpand(True)
+        self.scrolled_window.set_vexpand(True)
+
+        self.yaxis_drawing_area = Gtk.DrawingArea()
+        self.yaxis_drawing_area.set_content_height(700)
+        self.yaxis_drawing_area.set_content_width(72)
+        self.yaxis_drawing_area.set_draw_func(self.draw_yaxis, None)
+
         self.drawing_area = Gtk.DrawingArea()
         self.drawing_area.set_content_height(700)
         self.drawing_area.set_content_width(len(position_data) + 100)
         self.drawing_area.set_draw_func(self.draw, None)
         self.scrolled_window.set_child(self.drawing_area)
 
-        self.overlay_box.set_child(self.scrolled_window)
+        self.plot_content_box = Gtk.Box()
+        self.plot_content_box.set_css_classes(["panel"])
+        self.plot_content_box.set_hexpand(True)
+        self.plot_content_box.set_vexpand(True)
+
+        self.plot_content_box.append(self.yaxis_drawing_area)
+        self.plot_content_box.append(self.scrolled_window)
+
+        self.overlay_box.set_child(self.plot_content_box)
 
         # INFOBOX
         self.info_box = Gtk.Box()
@@ -185,6 +199,18 @@ class PlotWindow(Gtk.Window):
 
         self.set_child(self.overlay_box)
 
+    def draw_yaxis(self, area, context, width, height, user_data):
+        context.set_source_rgb(1.0, 1.0, 1.0)
+        context.paint()
+
+        metadata = self.__get_data_metadata(
+            data=self.position_data, idx=self.selected_datatype + 1
+        )
+
+        self.__draw_plot_yaxis(
+            context=context, width=width, height=height, metadata=metadata
+        )
+
     def draw(self, area, context, width, height, user_data):
         self.logger.debug("draw: width=%i, height=%i", width, height)
 
@@ -197,7 +223,7 @@ class PlotWindow(Gtk.Window):
 
         self.drawing_area.set_content_width(metadata["bins"] + 100)
 
-        self.__draw_plot_axes(
+        self.__draw_plot_xaxis(
             context=context, width=width, height=height, metadata=metadata
         )
 
@@ -212,60 +238,12 @@ class PlotWindow(Gtk.Window):
             colors=[0.3, 0.3, 0.7],
         )
 
-    def __draw_plot_axes(self, context, width, height, metadata):
+    def __draw_plot_yaxis(self, context, width, height, metadata):
         context.set_source_rgb(0.1, 0.1, 0.1)
 
-        # x axis
-        context.move_to(self.x_offset, height - self.y_offset)
-        context.line_to(metadata["bins"] + 50, height - self.y_offset)
+        context.move_to(70, 160)
+        context.line_to(70, height - self.y_offset)
         context.stroke()
-
-        # y axis
-        context.move_to(self.x_offset, 160)
-        context.line_to(self.x_offset, height - self.y_offset)
-        context.stroke()
-
-        # x axis tickscontext.move_to(metadata["bins"], height - self.y_offset + 30)
-        for x in range(self.x_offset, metadata["bins"] + 50):
-            if (x - self.x_offset) % int(60 / self.bin_size) == 0:
-                context.move_to(x, height - self.y_offset)
-                context.line_to(x, height - self.y_offset - 5)
-                context.stroke()
-
-            if (x - self.x_offset) % int(300 / self.bin_size) == 0:
-                context.move_to(x, height - self.y_offset)
-                context.line_to(x, height - self.y_offset + 10)
-                context.stroke()
-                context.move_to(x, height - self.y_offset + 20)
-                context.show_text(
-                    "+"
-                    + "{:.0f}".format((x - self.x_offset) / int(60 / self.bin_size))
-                    + "min"
-                )
-
-        context.set_source_rgb(0.3, 0.0, 0.0)
-
-        ts = datetime.fromtimestamp(metadata["t_start"])
-        ts_str = ts.strftime("%Y-%m-%d")
-        context.move_to(self.x_offset, height - self.y_offset + 30)
-        context.show_text(str(ts_str))
-
-        ts_str = ts.strftime("%H:%M:%S")
-        context.move_to(self.x_offset, height - self.y_offset + 40)
-        context.show_text(str(ts_str))
-
-        x = metadata["bins"]
-
-        if x < 120:
-            x = 120
-        ts = datetime.fromtimestamp(metadata["t_end"])
-        ts_str = ts.strftime("%Y-%m-%d")
-        context.move_to(x, height - self.y_offset + 30)
-        context.show_text(str(ts_str))
-
-        ts_str = ts.strftime("%H:%M:%S")
-        context.move_to(x, height - self.y_offset + 40)
-        context.show_text(str(ts_str))
 
         # y axis ticks
         context.move_to(10, 160 - 10)
@@ -279,12 +257,60 @@ class PlotWindow(Gtk.Window):
                 - self.y_offset
                 - (((i * dist_per_tick) / metadata["max"]["value"]) * (height - 200))
             )
-            context.move_to(self.x_offset - 5, y)
-            context.line_to(self.x_offset, y)
+            context.move_to(65, y)
+            context.line_to(70, y)
             context.stroke()
 
             context.move_to(10, y)
             context.show_text("{:.2f}".format(i * dist_per_tick))
+
+    def __draw_plot_xaxis(self, context, width, height, metadata):
+        context.set_source_rgb(0.1, 0.1, 0.1)
+
+        # x axis
+        context.move_to(0, height - self.y_offset)
+        context.line_to(metadata["bins"] + 50, height - self.y_offset)
+        context.stroke()
+
+        # x axis tickscontext.move_to(metadata["bins"], height - self.y_offset + 30)
+        for x in range(0, metadata["bins"] + 50):
+            if x % int(60 / self.bin_size) == 0:
+                context.move_to(x, height - self.y_offset)
+                context.line_to(x, height - self.y_offset - 5)
+                context.stroke()
+
+            if x % int(300 / self.bin_size) == 0:
+                context.move_to(x, height - self.y_offset)
+                context.line_to(x, height - self.y_offset + 10)
+                context.stroke()
+                context.move_to(x, height - self.y_offset + 20)
+                context.show_text(
+                    "+" + "{:.0f}".format(x / int(60 / self.bin_size)) + "min"
+                )
+
+        context.set_source_rgb(0.3, 0.0, 0.0)
+
+        ts = datetime.fromtimestamp(metadata["t_start"])
+        ts_str = ts.strftime("%Y-%m-%d")
+        context.move_to(0, height - self.y_offset + 30)
+        context.show_text(str(ts_str))
+
+        ts_str = ts.strftime("%H:%M:%S")
+        context.move_to(0, height - self.y_offset + 40)
+        context.show_text(str(ts_str))
+
+        x = metadata["bins"]
+
+        if x < 80:
+            x = 80
+        ts = datetime.fromtimestamp(metadata["t_end"])
+        ts_str = ts.strftime("%Y-%m-%d")
+        context.move_to(x, height - self.y_offset + 30)
+        context.show_text(str(ts_str))
+
+        ts_str = ts.strftime("%H:%M:%S")
+        context.move_to(x, height - self.y_offset + 40)
+        context.show_text(str(ts_str))
 
     def __get_data_metadata(self, data, idx):
         min = 0.0
@@ -375,7 +401,7 @@ class PlotWindow(Gtk.Window):
                     bin_min_val = 1e100
                     bin_max_val = 0.0
 
-            x = self.x_offset
+            x = 0
             last = [x, height - self.y_offset]
             for s in bins:
                 if self.bin_size > 1:
@@ -422,6 +448,7 @@ class PlotWindow(Gtk.Window):
         )
 
         self.drawing_area.queue_draw()
+        self.yaxis_drawing_area.queue_draw()
 
     def __on_x_zoom_in_button_pressed(self, button):
         self.logger.debug("[zoom in] pressed")
