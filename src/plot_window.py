@@ -246,23 +246,27 @@ class PlotWindow(Gtk.Window):
         context.stroke()
 
         # y axis ticks
-        context.move_to(10, 160 - 10)
-        context.show_text(str(metadata["max"]["value"]))
+        if metadata["max"]["value"] > 0.0:
+            context.move_to(10, 160 - 10)
+            context.show_text(str(metadata["max"]["value"]))
 
-        dist_per_tick = metadata["max"]["value"] / 10
+            dist_per_tick = metadata["max"]["value"] / 10
 
-        for i in range(0, 10):
-            y = (
-                height
-                - self.y_offset
-                - (((i * dist_per_tick) / metadata["max"]["value"]) * (height - 200))
-            )
-            context.move_to(65, y)
-            context.line_to(70, y)
-            context.stroke()
+            for i in range(0, 10):
+                y = (
+                    height
+                    - self.y_offset
+                    - (
+                        ((i * dist_per_tick) / metadata["max"]["value"])
+                        * (height - 200)
+                    )
+                )
+                context.move_to(65, y)
+                context.line_to(70, y)
+                context.stroke()
 
-            context.move_to(10, y)
-            context.show_text("{:.2f}".format(i * dist_per_tick))
+                context.move_to(10, y)
+                context.show_text("{:.2f}".format(i * dist_per_tick))
 
     def __draw_plot_xaxis(self, context, width, height, metadata):
         context.set_source_rgb(0.1, 0.1, 0.1)
