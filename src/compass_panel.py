@@ -152,10 +152,16 @@ class CompassPanel(Panel):
             self.value_label.set_label("---")
         else:
             if self.is_dashboard:
-                self.value_label.set_label(str(cog) + "°\n" + str(sog) + "kph")
+                self.value_label.set_label(
+                    "{:.2f}".format(cog) + "°\n" + "{:.2f}".format(sog) + "kph"
+                )
             else:
                 self.value_label.set_label(
-                    "course: " + str(cog) + "°\nspeed: " + str(sog) + "kph"
+                    "course: "
+                    + "{:.2f}".format(cog)
+                    + "°\nspeed: "
+                    + "{:.2f}".format(sog)
+                    + "kph"
                 )
 
     def draw_arrow(self, context, width, height, cog):
