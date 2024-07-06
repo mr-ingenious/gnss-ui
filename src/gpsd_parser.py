@@ -78,8 +78,14 @@ class GpsdParser:
 
             if (
                 nmea_start >= 0
+                and nmea_cs_start != -1
                 and (nmea_cs_start + 3) >= nmea_start
                 and nmea_start < json_start
+            ) or (
+                nmea_start >= 0
+                and nmea_cs_start != -1
+                and (nmea_cs_start + 3) >= nmea_start
+                and json_start == -1
             ):
                 self.logger.debug("found complete NMEA string, try to parse ...")
                 # found full NMEA string --> parse and remove from input buffer

@@ -15,8 +15,6 @@ class GpsdClient(threading.Thread):
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("gpsd")
-        
-        
 
     def set_params(self, hostname, port, observer):
         self.server_address = (hostname, port)

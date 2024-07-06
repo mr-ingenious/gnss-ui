@@ -151,8 +151,11 @@ class DataModel:
             if msg["magvar_deg"] != "":
                 magvar_deg = float(msg["magvar_deg"])
 
+            mag_deg = cog_deg + magvar_deg
+            
             self.position["data"]["cog"] = {
                 "deg": cog_deg,
+                "mag_deg": mag_deg,
                 "magvar_deg": magvar_deg,
             }
 

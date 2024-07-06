@@ -90,6 +90,7 @@ class ConfigProvider:
                     "panel_refresh_cycle_sec": 10,
                     "resolution": {"height": 800, "width": 1200},
                 },
+                "ttyc": {"ttyname": "/dev/ttyUSB1", "baudrate": 9600},
                 "gpsd": {"hostname": "localhost", "port": 2947},
                 "startup": {
                     "connect_to_gpsd": True,
@@ -100,6 +101,7 @@ class ConfigProvider:
                     "initial_zoom_level": 5,
                     "show_satellites_dashboard": True,
                     "show_position_dashboard": True,
+                    "show_compass_dashboard": True,
                     "start_latitude": 0.0,
                     "start_longitude": 0.0,
                 },
@@ -113,7 +115,6 @@ class ConfigProvider:
         return self.config
 
     def get_param(self, path, default=None):
-        # self.logger.debug("++++ path: %s", path)
         path = "config/" + path
         pparts = path.replace("//", "/").split("/")
 
@@ -124,7 +125,6 @@ class ConfigProvider:
         idx = 0
         while len(pparts) > idx:
             part = pparts[idx]
-            # self.logger.debug("part: %s", part)
             val = d.get(part)
 
             if part == "":
@@ -132,12 +132,10 @@ class ConfigProvider:
                 continue
 
             if val != None:
-                # self.logger.debug(" --->  %s: %s", part, repr(val))
                 idx = idx + 1
                 d = val
                 found = True
             else:
-                # self.logger.debug(" --->  %s: %s", part, repr(val))
                 found = False
                 break
 

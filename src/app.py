@@ -7,6 +7,7 @@ import threading
 import time
 
 from left_menu_panel import LeftMenuPanel
+from tty_client import TtyClient
 from gpsd_client import GpsdClient
 from observer import Observer
 
@@ -48,7 +49,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.9.5"
+APP_VERSION = "0.10.0"
 
 
 class PanelRefresher(threading.Thread):
@@ -220,6 +221,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
         if self.config.get_param("startup/connect_to_gpsd"):
             self.create_and_start_gpsdc()
+        elif self.config.get_param("startup/connect_to_ttyc"):
+            self.create_and_start_ttyc()
 
         self.panels_update_thread = PanelRefresher(
             self, cycle_sec=self.config.get_param("general/panel_refresh_cycle_sec", 2)
@@ -250,8 +253,12 @@ class MainWindow(Gtk.ApplicationWindow):
         self.panels_update_thread.signalize_stop()
         self.panels_update_thread.join(5)
 
-        self.gpsdc.signalize_stop()
-        self.gpsdc.join(5)
+        if hasattr(self, "gpsd"):
+            self.gpsdc.signalize_stop()
+            self.gpsdc.join(5)
+        elif  hasattr(self, "ttyc"):
+            self.ttyc.signalize_stop()
+            self.ttyc.join(5)
 
     def updateNmea(self, msg):
         self.received_nmea_message_ct += 1
@@ -350,6 +357,20 @@ class MainWindow(Gtk.ApplicationWindow):
 
         if not self.gpsdc.is_alive():
             self.gpsdc.start()
+
+    def create_and_start_ttyc(self):
+        self.logger.info("creating and starting tty client ...")
+        if not hasattr(self, "ttyc"):
+            self.logger.info("creating new tty client instance")
+            self.ttyc = TtyClient()
+            self.ttyc.set_params(
+                self.config.get_param("ttyc/ttyname"),
+                self.config.get_param("ttyc/baudrate"),
+                self,
+            )
+
+        if not self.ttyc.is_alive():
+            self.ttyc.start()
 
     def on_start_gpsd_button_pressed(self, action, param):
         self.create_and_start_gpsdc()

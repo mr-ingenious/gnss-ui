@@ -26,8 +26,6 @@ class CompassPanel(Panel):
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
 
-        self.logger.info("compass panel created")
-
         self.overlay_box = Gtk.Overlay()
         self.overlay_box.set_hexpand(True)
         self.overlay_box.set_vexpand(True)

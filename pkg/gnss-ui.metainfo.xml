@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>gnss-ui</id>
+    <launchable type="desktop-id">gnss-ui.desktop</launchable>
+    <name>gnss-ui</name>
+    <developer id="gnss-ui">
+        <name translatable="no">Mr. Ingenious</name>
+    </developer>
+    <summary>User Interface for GNSS Receivers</summary>
+    <description>
+        <p>
+            GTK4 python based GNSS (GPS, Galileo, BeiDou) dashboard to display
+            information gathered from GNSS receivers. GPSD client included.
+        </p>
+    </description>
+    <metadata_license>FSFAP</metadata_license>
+    <project_license>GPL-3.0-or-later</project_license>
+    <supports>
+        <control>pointing</control>
+        <control>keyboard</control>
+        <control>touch</control>
+        <control>tablet</control>
+        <control>gamepad</control>
+    </supports>
+    <recommends>
+        <display_length compare="ge">800</display_length>
+    </recommends>
+    <content_rating type="oars-1.1" />
+    <url type="homepage">https://github.com/mr-ingenious/gnss-ui</url>
+    <url type="bugtracker">https://github.com/mr-ingenious/gnss-ui/issues</url>
+    <screenshots>
+        <screenshot type="default">
+            <image>
+                https://raw.githubusercontent.com/mr-ingenious/gnss-ui/main/screenshots/gnss-ui1.png</image>
+            <caption>Main window</caption>
+        </screenshot>
+    </screenshots>
+    <releases>
+        <release version="0.9.5" date="2024-07-06">
+            <description>
+                <ul>
+                    <li>First release.</li>
+                </ul>
+            </description>
+        </release>
+    </releases>
+</component>
