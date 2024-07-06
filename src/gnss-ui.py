@@ -49,7 +49,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.10.0"
+APP_VERSION = "0.10.1"
 
 
 class PanelRefresher(threading.Thread):
@@ -75,6 +75,13 @@ class PanelRefresher(threading.Thread):
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # display = self.get_display()
+        # theme = Gtk.IconTheme.get_for_display(display)
+
+        # print("theme name:    " + theme.get_theme_name())
+        # print("resource path: " + repr(theme.get_resource_path()))
+        # print("icon names:    " + repr(theme.get_icon_names()))
 
         logging.config.fileConfig("gnss-ui/assets/log.ini")
         self.logger = logging.getLogger("app")
@@ -256,7 +263,7 @@ class MainWindow(Gtk.ApplicationWindow):
         if hasattr(self, "gpsd"):
             self.gpsdc.signalize_stop()
             self.gpsdc.join(5)
-        elif  hasattr(self, "ttyc"):
+        elif hasattr(self, "ttyc"):
             self.ttyc.signalize_stop()
             self.ttyc.join(5)
 
