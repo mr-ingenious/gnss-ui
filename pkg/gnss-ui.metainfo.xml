@@ -36,6 +36,27 @@
         </screenshot>
     </screenshots>
     <releases>
+        <release version="0.10.2" date="2024-07-06">
+            <description>
+                <ul>
+                    <li>Minor bugfixes.</li>
+                </ul>
+            </description>
+        </release>
+        <release version="0.10.1" date="2024-07-06">
+            <description>
+                <ul>
+                    <li>Minor bugfixes.</li>
+                </ul>
+            </description>
+        </release>
+        <release version="0.10.0" date="2024-07-06">
+            <description>
+                <ul>
+                    <li>Added items for release.</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.9.5" date="2024-07-06">
             <description>
                 <ul>

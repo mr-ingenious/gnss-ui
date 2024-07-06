@@ -2,7 +2,7 @@
 Type=Application
 Name=gnss-ui
 Comment=User Interface for GNSS Receivers
-Exec=app.py
+Exec=gnss-ui.py
 Icon=gnss-ui
 Terminal=false
 Categories=Utility;GNOME;GTK;
