@@ -2,9 +2,12 @@
 
 import sys
 import gi
+import os
 
 import threading
 import time
+
+import logger
 
 from left_menu_panel import LeftMenuPanel
 from tty_client import TtyClient
@@ -49,7 +52,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-APP_VERSION = "0.10.2"
+APP_VERSION = "0.10.3"
 
 
 class PanelRefresher(threading.Thread):
@@ -83,8 +86,10 @@ class MainWindow(Gtk.ApplicationWindow):
         # print("resource path: " + repr(theme.get_resource_path()))
         # print("icon names:    " + repr(theme.get_icon_names()))
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        os.makedirs(os.path.expanduser("~/.gnss-ui"), exist_ok=True)
+        os.makedirs(os.path.expanduser("~/.config/gnss-ui"), exist_ok=True)
+
+        self.logger = logger.get_logger("app")
 
         self.config = ConfigProvider()
 
@@ -197,7 +202,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.recorder_panel = DataRecorderPanel(
             recorder=self.recorder,
             main_window=self,
-            export_directory=self.config.get_param("recording/export/directory", "./"),
+            export_directory=self.config.get_param(
+                "recording/export/directory", "~/.gnss-ui"
+            ),
         )
 
         if "recorder" in self.config.get_param("startup/panels_shown"):
@@ -260,7 +267,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.panels_update_thread.signalize_stop()
         self.panels_update_thread.join(5)
 
-        if hasattr(self, "gpsd"):
+        if hasattr(self, "gpsdc"):
             self.gpsdc.signalize_stop()
             self.gpsdc.join(5)
         elif hasattr(self, "ttyc"):
@@ -432,5 +439,12 @@ class MyApp(Adw.Application):
         pass
 
 
-app = MyApp(application_id="mr-ingenious.gnss-ui")
-app.run(sys.argv)
+def main(argv):
+    """App Entry Point"""
+    app = MyApp(application_id="mr-ingenious.gnss-ui")
+    app.run(sys.argv)
+
+
+if __name__ == "__main__":
+    print("Main: App start.")
+    SystemExit(main(sys.argv))

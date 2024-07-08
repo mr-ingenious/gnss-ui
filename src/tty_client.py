@@ -8,6 +8,9 @@ from gpsd_parser import GpsdParser
 from observer import Observer
 
 
+import logger
+
+
 class TtyClient(threading.Thread):
     def __init__(self):
         super().__init__()
@@ -16,8 +19,7 @@ class TtyClient(threading.Thread):
         self.baudrate = 9600
         self.serial = None
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("ttyc")
+        self.logger = logger.get_logger("ttyc")
 
     def set_params(self, tty_name, baudrate, observer):
         self.tty_name = tty_name

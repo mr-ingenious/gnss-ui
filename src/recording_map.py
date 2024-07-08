@@ -4,6 +4,8 @@ import gi
 
 import logging
 
+import logger
+
 from datetime import datetime
 
 gi.require_version("Gtk", "4.0")
@@ -22,8 +24,8 @@ class RecordingMapWindow(Gtk.Window):
         )
 
         self.set_title(recording_info["name"])
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+
+        self.logger = logger.get_logger("app")
 
         self.set_hexpand(True)
         self.set_vexpand(True)

@@ -10,6 +10,7 @@ from gi.repository import Gtk
 from panel import Panel
 
 import logging
+import logger
 
 
 class SatellitesInfoPanel(Panel):
@@ -19,9 +20,7 @@ class SatellitesInfoPanel(Panel):
         self.last_update = 0
         self.satellites_shown = dict()
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-
-        self.logger = logging.getLogger("app")
+        self.logger = logger.get_logger("app")
 
         self.panel_label = Gtk.Label(label="Satellites")
         self.panel_label.set_css_classes(["panel_title"])

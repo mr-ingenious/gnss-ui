@@ -5,6 +5,8 @@ import time
 import math
 import logging
 
+import logger
+
 from datetime import datetime
 
 
@@ -58,8 +60,7 @@ class PlotWindow(Gtk.Window):
         self.set_hexpand(True)
         self.set_vexpand(True)
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        self.logger = logger.get_logger("app")
 
         self.overlay_box = Gtk.Overlay()
         self.overlay_box.set_hexpand(True)

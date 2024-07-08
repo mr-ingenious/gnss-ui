@@ -13,13 +13,13 @@ from panel import Panel
 
 import logging
 
+import logger
 
 class MapPanel(Panel):
     def __init__(self):
         super().__init__()
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        self.logger = logger.get_logger("app")
 
         self.last_values_update = time.time()
         self.last_map_update = time.time()

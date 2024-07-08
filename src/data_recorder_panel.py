@@ -2,6 +2,8 @@
 
 import logging
 
+import logger
+
 from panel import Panel
 
 import gi
@@ -21,7 +23,7 @@ from datetime import datetime
 
 
 class DataRecorderPanel(Panel):
-    def __init__(self, recorder, main_window, export_directory="./"):
+    def __init__(self, recorder, main_window, export_directory="~/.gnss-ui/"):
         super().__init__()
 
         self.parent_window = main_window
@@ -32,8 +34,7 @@ class DataRecorderPanel(Panel):
 
         self.last_list_selected_ts = 0
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("recorder")
+        self.logger = logger.get_logger("recorder")
 
         self.set_css_classes(["recording_panel", "panel"])
 
@@ -238,7 +239,7 @@ class DataRecorderPanel(Panel):
         self.recording_details_box.append(self.recording_details_info_box)
         self.recording_details_box.append(self.recording_details_controls_box)
         self.recording_details_box.append(self.recording_details_controls_box2)
-        
+
         self.recording_details_frame.set_visible(False)
 
         self.append(self.recording_details_frame)

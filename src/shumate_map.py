@@ -8,6 +8,8 @@ import time
 
 import logging
 
+import logger
+
 gi.require_version("Gtk", "4.0")
 gi.require_version("Shumate", "1.0")
 
@@ -44,8 +46,7 @@ class ShumateMapPanel(Panel):
         self.initial_zoom = initial_zoom_level
         self.export_directory = export_directory
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        self.logger = logger.get_logger("app")
 
         self.set_css_classes(["panel", "map_panel"])
 

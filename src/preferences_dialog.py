@@ -3,6 +3,8 @@ import gi
 
 import logging
 
+import logger
+
 gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
@@ -15,8 +17,7 @@ class PreferencesDialog(Gtk.Window):
 
         self.config = config_provider
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        self.logger = logger.get_logger("app")
 
         self.set_default_size(800, 500)
         self.set_css_classes(["preferences_dialog"])

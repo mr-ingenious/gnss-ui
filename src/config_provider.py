@@ -4,16 +4,17 @@ import os
 import json
 import logging
 
+import logger
+
 from datetime import datetime
 
 
 class ConfigProvider:
     def __init__(self):
-        self.config_filename = "./appconfig.json"
+        self.config_filename = os.path.expanduser("~/.config/gnss-ui") + "/appconfig.json"
         self.config = dict()
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("config")
+        self.logger = logger.get_logger("config")
 
         self.__load_config()
 
@@ -21,8 +22,15 @@ class ConfigProvider:
         config_str = ""
 
         try:
-            with open(self.config_filename, "r", encoding="utf-8") as jsonfile:
-                self.logger.debug("config: '%s'", os.path.abspath(self.config_filename))
+            with open(
+                self.config_filename,
+                "r",
+                encoding="utf-8",
+            ) as jsonfile:
+                self.logger.debug(
+                    "config: '%s'",
+                    self.config_filename,
+                )
                 config_str = jsonfile.read()
                 self.logger.debug("(1) config file contents:")
                 self.logger.debug("-----------------------------------")
@@ -30,16 +38,21 @@ class ConfigProvider:
                 self.logger.debug("-----------------------------------")
                 jsonfile.close()
         except FileNotFoundError as err:  # should this ever happen with "w+" ?
-            self.logger.warn("config file not found: %s", repr(err))
-            self.logger.warn("config: '%s'", os.path.abspath(self.config_filename))
+            self.logger.warn(
+                "config file not found: '%s'",
+                self.config_filename,
+            )
             self.__create_initial_config()
 
             try:
-                with open(self.config_filename, "r", encoding="utf-8") as jsonfile:
+                with open(
+                    self.config_filename,
+                    "r",
+                    encoding="utf-8",
+                ) as jsonfile:
 
-                    self.logger.debug(
-                        "config: '%s'", os.path.abspath(self.config_filename)
-                    )
+                    self.logger.debug("config: '%s'", self.config_filename)
+
                     config_str = jsonfile.read()
                     self.logger.debug("(2) config file contents:")
                     self.logger.debug("-----------------------------------")
@@ -65,19 +78,23 @@ class ConfigProvider:
 
     def save(self):
         self.logger.debug("saving config file ...")
-        with open(self.config_filename, "w+", encoding="utf-8") as jsonfile:
+        with open(
+            self.config_filename,
+            "w+",
+            encoding="utf-8",
+        ) as jsonfile:
 
             now = datetime.now()
             date_time = now.strftime("%Y-%m-%d %H:%M:%S")
             self.config["last_update"] = date_time
 
-            self.logger.debug("config: '%s'", os.path.abspath(self.config_filename))
+            self.logger.debug("config: '%s'", self.config_filename)
             jsonfile.write(json.dumps(self.config, ensure_ascii=False, indent=4))
             self.logger.debug("Writing file successful")
             jsonfile.close()
 
     def __create_initial_config(self):
-        self.logger.debug("creating initial config file structure ...")
+        self.logger.info("creating initial config file '%s'", self.config_filename)
 
         now = datetime.now()
         date_time = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -105,7 +122,7 @@ class ConfigProvider:
                     "start_latitude": 0.0,
                     "start_longitude": 0.0,
                 },
-                "recording": {"export": {"export_directory": "./"}},
+                "recording": {"export": {"directory": "~/.gnss-ui"}},
             },
         }
 

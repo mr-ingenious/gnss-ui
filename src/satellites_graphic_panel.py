@@ -5,6 +5,8 @@ import time
 import math
 import logging
 
+import logger
+
 gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
@@ -22,8 +24,7 @@ class SatellitesGraphicPanel(Panel):
 
         self.satellites = dict()
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        self.logger = logger.get_logger("app")
 
         self.drawing_area = Gtk.DrawingArea()
 

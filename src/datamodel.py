@@ -6,12 +6,13 @@ import pprint
 import logging
 import math
 
+import logger
+
 
 class DataModel:
     def __init__(self):
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("datamodel")
+        self.logger = logger.get_logger("datamodel")
 
         self.__setup_structure()
 

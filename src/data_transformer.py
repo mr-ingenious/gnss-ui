@@ -1,6 +1,9 @@
 #! /usr/bin/python3
 
 import logging
+
+import logger
+
 import xml.etree.ElementTree as et
 
 from datetime import datetime
@@ -8,8 +11,7 @@ from datetime import datetime
 
 class DataTransformer:
     def __init__(self):
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("app")
+        self.logger = logger.get_logger("app")
 
     def to_gpx(self, rec_info, data, filename="track.gpx"):
         gpx = et.Element("gpx")
@@ -46,17 +48,19 @@ class DataTransformer:
             ts = datetime.fromtimestamp(data[i][18])
             ts_str = ts.strftime("%Y-%m-%dT%H:%M:%SZ")
             et.SubElement(trkpt, "time").text = ts_str
-            et.SubElement(trkpt, "ele").text = str(data[i][3]) # altitude in meters
-            et.SubElement(trkpt, "sat").text = str(data[i][8]) # number of satelllites used to calc. position
+            et.SubElement(trkpt, "ele").text = str(data[i][3])  # altitude in meters
+            et.SubElement(trkpt, "sat").text = str(
+                data[i][8]
+            )  # number of satelllites used to calc. position
             et.SubElement(trkpt, "geoidheight").text = str(data[i][17])
             et.SubElement(trkpt, "magvar").text = str(data[i][7])
-            
+
             if data[i][16] == 2:
-                et.SubElement(trkpt, "fix").text = "2d" 
+                et.SubElement(trkpt, "fix").text = "2d"
             elif data[i][16] == 3:
                 et.SubElement(trkpt, "fix").text = "3d"
-                
-            #et.SubElement(trkpt, "ageofdgpsdata").text = str(data[i][3])  ## TODO
+
+            # et.SubElement(trkpt, "ageofdgpsdata").text = str(data[i][3])  ## TODO
 
             et.SubElement(trkpt, "hdop").text = str(data[i][9])
             et.SubElement(trkpt, "pdop").text = str(data[i][10])

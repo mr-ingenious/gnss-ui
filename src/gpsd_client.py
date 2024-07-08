@@ -8,13 +8,14 @@ import json
 from gpsd_parser import GpsdParser
 from observer import Observer
 
+import logger
+
 
 class GpsdClient(threading.Thread):
     def __init__(self):
         super().__init__()
-
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("gpsd")
+        
+        self.logger = logger.get_logger("gpsd")
 
     def set_params(self, hostname, port, observer):
         self.server_address = (hostname, port)

@@ -3,9 +3,10 @@
 # import pynmea2
 from observer import Observer
 
-import logging, logging.config
+import logging
 import json
 
+import logger
 
 class GpsdParser:
     _observer: Observer
@@ -14,8 +15,7 @@ class GpsdParser:
         self._observer = observer
         self.data = ""
 
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("gpsd")
+        self.logger = logger.get_logger("gpsd")
 
         # logging.basicConfig(
         #    level=logging.INFO,

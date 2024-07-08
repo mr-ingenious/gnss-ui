@@ -3,6 +3,8 @@ import gi
 
 import logging
 
+import logger
+
 gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
@@ -64,9 +66,8 @@ class PreferencesDialog(Gtk.Window):
     def __init__(self, config_provider):
         super().__init__()
         self.config = config_provider
-
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("preferences")
+        
+        self.logger = logger.get_logger("preferences")
 
         self.title.set_css_classes(["panel_title"])
         self.buttons_area.set_css_classes(["preferences_buttons_area"])
