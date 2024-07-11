@@ -7,6 +7,7 @@ def get_logger(logger_name):
     try:
         logging.config.fileConfig(os.path.expanduser("~/.config/gnss-ui/log.ini"))
     except Exception as e:
+        log_filename = os.path.expanduser("~/.gnss-ui") + "/gnss-ui.log"
         DEFAULT_LOGGING = {
             "version": 1,
             "disable_existing_loggers": False,
@@ -31,7 +32,7 @@ def get_logger(logger_name):
                     "level": "INFO",
                     "class": "logging.FileHandler",
                     "formatter": "brief",
-                    "filename": "gnss-ui.log",
+                    "filename": log_filename,
                     # 'mode': 'a',
                     # 'encoding': 'utf-8',
                 },

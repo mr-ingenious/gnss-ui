@@ -1,6 +1,9 @@
 #! /usr/bin/python3
 
 import sys
+
+import sysconfig
+
 import gi
 import os
 
@@ -47,12 +50,22 @@ gi.require_version("WebKit", "6.0")
 from gi.repository import Gtk, Gdk, Gio, GLib, Adw
 
 css_provider = Gtk.CssProvider()
-css_provider.load_from_path("./gnss-ui/assets/appstyle.css")
+
+sys.path.append(sysconfig.get_path("purelib") + "/gnss-ui/assets")
+sys.path.append(sysconfig.get_path("purelib") + "/gnss-ui")
+
+css_path = "./"
+for p in sys.path:
+    if p.find("gnss-ui/assets") != -1:
+        css_path = p
+        break
+
+css_provider.load_from_path(css_path + "/appstyle.css")
 Gtk.StyleContext.add_provider_for_display(
-    Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
 )
 
-APP_VERSION = "0.10.3"
+APP_VERSION = "0.10.4"
 
 
 class PanelRefresher(threading.Thread):
@@ -70,7 +83,6 @@ class PanelRefresher(threading.Thread):
 
     def run(self):
         while self.do_run:
-            # print("[REFRESHER THREAD]")
             self.target.update_panels()
             time.sleep(self.cycle_time_sec)
 
@@ -265,14 +277,14 @@ class MainWindow(Gtk.ApplicationWindow):
     def handle_exit(self):
         self.logger.info("stopping gpsd client and panels update thread")
         self.panels_update_thread.signalize_stop()
-        self.panels_update_thread.join(5)
+        self.panels_update_thread.join(1)
 
         if hasattr(self, "gpsdc"):
             self.gpsdc.signalize_stop()
-            self.gpsdc.join(5)
+            self.gpsdc.join(2)
         elif hasattr(self, "ttyc"):
             self.ttyc.signalize_stop()
-            self.ttyc.join(5)
+            self.ttyc.join(2)
 
     def updateNmea(self, msg):
         self.received_nmea_message_ct += 1
@@ -447,4 +459,5 @@ def main(argv):
 
 if __name__ == "__main__":
     print("Main: App start.")
+
     SystemExit(main(sys.argv))
