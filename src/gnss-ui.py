@@ -53,19 +53,26 @@ css_provider = Gtk.CssProvider()
 
 sys.path.append(sysconfig.get_path("purelib") + "/gnss-ui/assets")
 sys.path.append(sysconfig.get_path("purelib") + "/gnss-ui")
+sys.path.append(os.path.dirname(os.path.abspath(__file__).replace("/src", "")))
+sys.path.append(os.path.dirname(os.path.abspath(__file__).replace("/src", "/assets")))
+
+print(os.path.dirname(os.path.abspath(__file__).replace("/src", "/assets")))
+
 
 css_path = "./"
 for p in sys.path:
     if p.find("gnss-ui/assets") != -1:
-        css_path = p
-        break
+        if os.path.exists(p + "/appstyle.css"):
+            css_path = p
+            break
+
 
 css_provider.load_from_path(css_path + "/appstyle.css")
 Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
 )
 
-APP_VERSION = "0.10.5"
+APP_VERSION = "0.10.6"
 
 
 class PanelRefresher(threading.Thread):
@@ -431,7 +438,7 @@ class MainWindow(Gtk.ApplicationWindow):
         for p in sys.path:
             if p.find("gnss-ui/assets") != -1:
                 if os.path.exists(p + "/" + resource_name):
-                    print(" resource file found: " + p + "/" + resource_name)
+                    # print(" resource file found: " + p + "/" + resource_name)
                     return p + "/" + resource_name
 
         print("no resource file found: " + resource_name)

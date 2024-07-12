@@ -31,7 +31,7 @@
     <screenshots>
         <screenshot type="default">
             <image>
-                https://raw.githubusercontent.com/mr-ingenious/gnss-ui/main/screenshots/gnss-ui1.png</image>
+                https://github.com/mr-ingenious/gnss-ui/raw/main/screenshots/gnss-ui1.png</image>
             <caption>Main window</caption>
         </screenshot>
     </screenshots>
