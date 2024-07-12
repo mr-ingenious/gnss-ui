@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import os
 import logging
 
 import logger
@@ -30,7 +31,7 @@ class DataRecorderPanel(Panel):
         self.selected_recording = None
         self.dialog = None
         self.recorder = recorder
-        self.export_directory = export_directory
+        self.export_directory = os.path.expanduser(export_directory)
 
         self.last_list_selected_ts = 0
 
@@ -49,34 +50,38 @@ class DataRecorderPanel(Panel):
         self.icons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
 
         self.start_rec_button_icon = Gtk.Picture()
-        self.start_rec_button_icon.set_filename("gnss-ui/assets/record_icon.svg")
+        self.start_rec_button_icon.set_filename(
+            self._get_resource_file("record_icon.svg")
+        )
 
         self.start_rec_button_icon_inactive = Gtk.Picture()
         self.start_rec_button_icon_inactive.set_filename(
-            "gnss-ui/assets/record_icon_inactive.svg"
+            self._get_resource_file("record_icon_inactive.svg")
         )
 
         self.pause_rec_button_icon = Gtk.Picture()
         self.pause_rec_button_icon.set_filename(
-            "gnss-ui/assets/pause_recording_icon.svg"
+            self._get_resource_file("pause_recording_icon.svg")
         )
 
         self.stop_rec_button_icon = Gtk.Picture()
-        self.stop_rec_button_icon.set_filename("gnss-ui/assets/stop_recording_icon.svg")
+        self.stop_rec_button_icon.set_filename(
+            self._get_resource_file("stop_recording_icon.svg")
+        )
 
         self.stop_rec_button_icon_inactive = Gtk.Picture()
         self.stop_rec_button_icon_inactive.set_filename(
-            "gnss-ui/assets/stop_recording_icon_inactive.svg"
+            self._get_resource_file("stop_recording_icon_inactive.svg")
         )
 
         self.export_rec_button_icon = Gtk.Picture()
         self.export_rec_button_icon.set_filename(
-            "gnss-ui/assets/floppy_disk_storage_icon.svg"
+            self._get_resource_file("floppy_disk_storage_icon.svg")
         )
 
         self.reset_button_icon = Gtk.Picture()
         self.reset_button_icon.set_filename(
-            "gnss-ui/assets/trash_can_delete_remove_icon.svg"
+            self._get_resource_file("trash_can_delete_remove_icon.svg")
         )
 
         # start_pause_button
@@ -386,7 +391,7 @@ class DataRecorderPanel(Panel):
 
         for recording in recordings:
             recording_icon = Gtk.Picture()
-            recording_icon.set_filename("gnss-ui/assets/map_icon.svg")
+            recording_icon.set_filename(self._get_resource_file("map_icon.svg"))
             recording_icon.set_css_classes(["recording_icon"])
 
             recording_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)

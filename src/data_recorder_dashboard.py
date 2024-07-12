@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import logging
+import logger
 
 from panel import Panel
 
@@ -23,8 +24,8 @@ class DataRecorderDashboard(Panel):
 
         self.recorder = recorder
         self.export_directory = export_directory
-        logging.config.fileConfig("gnss-ui/assets/log.ini")
-        self.logger = logging.getLogger("recorder")
+
+        self.logger = logger.get_logger("recorder")
 
         self.set_css_classes(["recording_dashboard", "map_dashboard"])
 
@@ -32,33 +33,37 @@ class DataRecorderDashboard(Panel):
 
         self.start_rec_button_icon = Gtk.Picture()
         self.start_rec_button_icon.set_filename(
-            "gnss-ui/assets/circle_dot_round_icon.svg"
+            self._get_resource_file("circle_dot_round_icon.svg")
         )
 
         self.start_rec_button_icon_inactive = Gtk.Picture()
         self.start_rec_button_icon_inactive.set_filename(
-            "gnss-ui/assets/circle_dot_round_icon_inactive.svg"
+            self._get_resource_file("circle_dot_round_icon_inactive.svg")
         )
 
         self.pause_rec_button_icon = Gtk.Picture()
-        self.pause_rec_button_icon.set_filename("gnss-ui/assets/circle_pause_icon.svg")
+        self.pause_rec_button_icon.set_filename(
+            self._get_resource_file("circle_pause_icon.svg")
+        )
 
         self.stop_rec_button_icon = Gtk.Picture()
-        self.stop_rec_button_icon.set_filename("gnss-ui/assets/circle_stop_icon.svg")
+        self.stop_rec_button_icon.set_filename(
+            self._get_resource_file("circle_stop_icon.svg")
+        )
 
         self.stop_rec_button_icon_inactive = Gtk.Picture()
         self.stop_rec_button_icon_inactive.set_filename(
-            "gnss-ui/assets/circle_stop_icon_inactive.svg"
+            self._get_resource_file("circle_stop_icon_inactive.svg")
         )
 
         self.export_rec_button_icon = Gtk.Picture()
         self.export_rec_button_icon.set_filename(
-            "gnss-ui/assets/floppy_disk_storage_icon.svg"
+            self._get_resource_file("floppy_disk_storage_icon.svg")
         )
 
         self.reset_button_icon = Gtk.Picture()
         self.reset_button_icon.set_filename(
-            "gnss-ui/assets/trash_can_delete_remove_icon.svg"
+            self._get_resource_file("trash_can_delete_remove_icon.svg")
         )
 
         # start_pause_button

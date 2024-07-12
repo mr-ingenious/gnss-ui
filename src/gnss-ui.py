@@ -65,7 +65,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
 )
 
-APP_VERSION = "0.10.4"
+APP_VERSION = "0.10.5"
 
 
 class PanelRefresher(threading.Thread):
@@ -125,7 +125,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.main_box.set_vexpand(True)
 
         self.bg_image = Gtk.Picture()
-        self.bg_image.set_filename("gnss-ui/assets/background.jpg")
+        self.bg_image.set_filename(self._get_resource_file("background.jpg"))
         self.bg_image.set_content_fit(Gtk.ContentFit.COVER)
 
         self.overlay_box = Gtk.Overlay()
@@ -426,6 +426,16 @@ class MainWindow(Gtk.ApplicationWindow):
 
         dialog = PreferencesDialog(self.config)
         # dialog.set_visible(True)
+
+    def _get_resource_file(self, resource_name):
+        for p in sys.path:
+            if p.find("gnss-ui/assets") != -1:
+                if os.path.exists(p + "/" + resource_name):
+                    print(" resource file found: " + p + "/" + resource_name)
+                    return p + "/" + resource_name
+
+        print("no resource file found: " + resource_name)
+        return None
 
 
 class MyApp(Adw.Application):

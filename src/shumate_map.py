@@ -94,7 +94,8 @@ class ShumateMapPanel(Panel):
         self.hint.set_css_classes(["map_hint"])
 
         self.b1_icon = Gtk.Picture()
-        self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
+        # self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
+        self.b1_icon.set_filename(self._get_resource_file("center_icon.svg"))
 
         self.autocenter_map = autocenter_map
         self.b1 = Gtk.Button(label="Toggle Auto center")
@@ -139,7 +140,9 @@ class ShumateMapPanel(Panel):
         self.marker.set_location(self.last_latitude, self.last_longitude)
         self.marker_icon = Gtk.Image()
         self.marker_icon.set_css_classes(["map_marker"])
-        self.marker_icon.set_from_file("gnss-ui/assets/marker_icon_large.png")
+        # self.marker_icon.set_from_file("gnss-ui/assets/marker_icon_large.png")
+        self.marker_icon.set_from_file(self._get_resource_file("marker_icon_large.png"))
+
         self.marker.set_child(self.marker_icon)
 
         self.marker_layer.add_marker(self.marker)
@@ -151,7 +154,7 @@ class ShumateMapPanel(Panel):
         self.overlay.add_overlay(self.position_dashboard)
         self.overlay.add_overlay(self.satellites_radar_dashboard)
         self.overlay.add_overlay(self.compass_dashboard)
-        
+
         if self.recorder_dashboard != None:
             self.overlay.add_overlay(self.recorder_dashboard)
 
@@ -165,10 +168,14 @@ class ShumateMapPanel(Panel):
         self.autocenter_map = not self.autocenter_map
 
         if self.autocenter_map == True:
-            self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
+            # self.b1_icon.set_filename("gnss-ui/assets/center_icon.svg")
+            self.b1_icon.set_filename(self._get_resource_file("center_icon.svg"))
             self.go_to_location(self.last_latitude, self.last_longitude)
         else:
-            self.b1_icon.set_filename("gnss-ui/assets/center_icon_inactive.svg")
+            # self.b1_icon.set_filename("gnss-ui/assets/center_icon_inactive.svg")
+            self.b1_icon.set_filename(
+                self._get_resource_file("center_icon_inactive.svg")
+            )
 
     def go_to_location(self, latitude, longitude):
         if math.isnan(latitude) or math.isnan(longitude):

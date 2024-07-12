@@ -37,7 +37,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.position_info_panel,
             self.position_icon,
-            "gnss-ui/assets/panel_icon_position_info(!).svg",
+            "panel_icon_position_info(!).svg",
         )
 
         # Position
@@ -54,7 +54,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.satellites_info_panel,
             self.satellites_icon,
-            "gnss-ui/assets/panel_icon_satellites_info2(!).svg",
+            "panel_icon_satellites_info2(!).svg",
         )
         self.satellites_button = Gtk.Button(label="Satellites")
         self.satellites_button.set_tooltip_text("Toggle Satellites Panel")
@@ -70,7 +70,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.satellites_radar_panel,
             self.satellites_radar_icon,
-            "gnss-ui/assets/panel_icon_satellites_radar(!).svg",
+            "panel_icon_satellites_radar(!).svg",
         )
         self.satellites_radar_button = Gtk.Button(label="Satellites Radar")
         self.satellites_radar_button.set_tooltip_text("Toggle Satellites Radar Panel")
@@ -86,7 +86,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.map_panel,
             self.map_icon,
-            "gnss-ui/assets/panel_icon_map(!).svg",
+            "panel_icon_map(!).svg",
         )
         self.map_button = Gtk.Button(label="Map")
         self.map_button.set_tooltip_text("Toggle Map Panel")
@@ -100,7 +100,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.recorder_panel,
             self.recorder_icon,
-            "gnss-ui/assets/panel_icon_recorder(!).svg",
+            "panel_icon_recorder(!).svg",
         )
 
         self.recorder_button = Gtk.Button(label="Recorder")
@@ -109,13 +109,13 @@ class LeftMenuPanel(Panel):
         self.recorder_button.set_child(self.recorder_icon)
         self.recorder_button.connect("clicked", self.on_recorder_button_pressed)
         self.append(self.recorder_button)
-        
+
         # compass
         self.compass_icon = Gtk.Picture()
         self.__set_icon(
             self.compass_panel,
             self.compass_icon,
-            "gnss-ui/assets/panel_icon_compass(!).svg",
+            "panel_icon_compass(!).svg",
         )
 
         self.compass_button = Gtk.Button(label="Compass")
@@ -127,9 +127,11 @@ class LeftMenuPanel(Panel):
 
     def __set_icon(self, panel, icon, filename_pattern):
         if panel.get_visible():
-            icon.set_filename(filename_pattern.replace("(!)", ""))
+            filename = filename_pattern.replace("(!)", "")
         else:
-            icon.set_filename(filename_pattern.replace("(!)", "_inactive"))
+            filename = filename_pattern.replace("(!)", "_inactive")
+
+        icon.set_filename(self._get_resource_file(filename))
 
     def on_position_info_button_pressed(self, button):
         self.position_info_panel.set_visible(not self.position_info_panel.get_visible())
@@ -137,7 +139,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.position_info_panel,
             self.position_icon,
-            "gnss-ui/assets/panel_icon_position_info(!).svg",
+            "panel_icon_position_info(!).svg",
         )
 
     def on_satellites_info_button_pressed(self, button):
@@ -147,7 +149,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.satellites_info_panel,
             self.satellites_icon,
-            "gnss-ui/assets/panel_icon_satellites_info2(!).svg",
+            "panel_icon_satellites_info2(!).svg",
         )
 
     def on_satellites_radar_button_pressed(self, button):
@@ -157,7 +159,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.satellites_radar_panel,
             self.satellites_radar_icon,
-            "gnss-ui/assets/panel_icon_satellites_radar(!).svg",
+            "panel_icon_satellites_radar(!).svg",
         )
 
     def on_map_button_pressed(self, button):
@@ -165,7 +167,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.map_panel,
             self.map_icon,
-            "gnss-ui/assets/panel_icon_map(!).svg",
+            "panel_icon_map(!).svg",
         )
 
     def on_recorder_button_pressed(self, button):
@@ -173,7 +175,7 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.recorder_panel,
             self.recorder_icon,
-            "gnss-ui/assets/panel_icon_recorder(!).svg",
+            "panel_icon_recorder(!).svg",
         )
 
     def on_compass_button_pressed(self, button):
@@ -181,5 +183,5 @@ class LeftMenuPanel(Panel):
         self.__set_icon(
             self.compass_panel,
             self.compass_icon,
-            "gnss-ui/assets/panel_icon_compass(!).svg",
+            "panel_icon_compass(!).svg",
         )
