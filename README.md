@@ -29,7 +29,16 @@ Several methods are possible to use or install the gnss-ui:
 
 1. git: just clone the repo and start `gnss-ui.py` in the `src` subdirectory.
 2. arch linux: a separate project to build an arch linux package exists at https://github.com/mr-ingenious/gnss-ui-pkg. Please find further explanations there.
-3. If time permits, maybe packaging for other linux distributions will be added.
+
+If time permits, maybe packaging for other linux distributions will be added.
+
+Some python libraries are required (versions I currently use in brackets):
+
+* GTK4 (version 4.14.4)
+* PyGOBject (version 3.48.2)
+* Cairo (version 1.26.0)
+* libshumate (https://gitlab.gnome.org/GNOME/libshumate) (version 1.2.2)
+
 
 ## Configuration
 
