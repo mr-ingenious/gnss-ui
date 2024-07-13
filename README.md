@@ -32,6 +32,8 @@ Several methods are possible to use or install the gnss-ui:
 3. If time permits, maybe packaging for other linux distributions will be added.
 
 ## Configuration
+
+### Application
 The application is configurable via the `appconfig.json` file located at `~/.config/gnss-ui`. The file is created automatically at first startup. Changes are effective after application restart.
 
 Example (default settings):
@@ -90,11 +92,100 @@ Description of the configuration options:
 | map_panel | Various settings for the map panel, such as start position of the map (default: 0,0), the zoom level or visibility of different dashboards within the map panel |
 | recording | Recording specific settings, such as the export directory |
 
+### Logging configuration
+
+Logging can be configured with a `log.ini` file: `~/.config/gnss-ui/log.ini`. As default, no log configuration file is created automatically, but the default logging is active (i.e., the application logs to `~/.gnss-ui/gnss-ui.log`)
+
+Example `log.ini`:
+
+    [loggers]
+    keys=root,app,datamodel,gpsd,ttyc,config,recorder,preferences
+
+    [handlers]
+    keys=consoleHandler,fileHandler
+
+    [formatters]
+    keys=fileFormatter,consoleFormatter
+
+    [logger_root]
+    level=DEBUG
+    handlers=consoleHandler
+
+    [logger_app]
+    level=INFO
+    handlers=consoleHandler,fileHandler
+    qualname=app
+    propagate=0
+
+    [logger_preferences]
+    level=DEBUG
+    handlers=consoleHandler,fileHandler
+    qualname=preferences
+    propagate=0
+
+    [logger_datamodel]
+    level=INFO
+    handlers=consoleHandler,fileHandler
+    qualname=datamodel
+    propagate=0
+
+    [logger_gpsd]
+    level=INFO
+    handlers=consoleHandler,fileHandler
+    qualname=gpsd
+    propagate=0
+
+    [logger_ttyc]
+    level=INFO
+    handlers=consoleHandler,fileHandler
+    qualname=ttyc
+    propagate=0
+
+    [logger_config]
+    level=INFO
+    handlers=consoleHandler,fileHandler
+    qualname=config
+    propagate=0
+
+    [logger_recorder]
+    level=DEBUG
+    handlers=consoleHandler,fileHandler
+    qualname=recorder
+    propagate=0
+
+    [handler_consoleHandler]
+    class=StreamHandler
+    level=DEBUG
+    formatter=consoleFormatter
+    args=(sys.stdout,)
+
+    [handler_fileHandler]
+    class=FileHandler
+    level=INFO
+    formatter=fileFormatter
+    args=('gnss-ui.log',)
+
+    [formatter_fileFormatter]
+    format=[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s
+    datefmt=
+
+    [formatter_consoleFormatter]
+    format=[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s
+    datefmt=
+
 ## Usage
 
 To make use of gpsd (see https://gpsd.gitlab.io/gpsd/ ) the daemon must be running in the background, but can also be started manually, e.g. for testing: `gpsd -nND5 /dev/ttyUSB1`. Refer to `gpsd` settings in the `appconfig.json`.
 
 Another possibility is to use the GNSS output from the modem / GNSS receiver directly (e.g., `/dev/ttyUSB1`) - see `ttyc` settings in the `appconfig.json`.
+
+## Working directory
+
+The application creates its files in `~/.gnss-ui`. Such files are
+* the SQLite database storing the recorded GNSS position information, satellites information etc.
+* the default output directory for recording exports.
+* the application log file
+
 
 ## Further information
 
