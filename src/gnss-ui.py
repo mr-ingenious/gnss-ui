@@ -72,7 +72,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
 )
 
-APP_VERSION = "0.10.6"
+APP_VERSION = "0.10.7"
 
 
 class PanelRefresher(threading.Thread):
@@ -409,24 +409,23 @@ class MainWindow(Gtk.ApplicationWindow):
         self.create_and_start_gpsdc()
 
     def show_about_dialog(self, action, param):
-        dialog = Adw.AboutWindow(transient_for=app.get_active_window())
+        dialog = Adw.AboutDialog(
+            application_icon="gnss-ui.svg",
+            application_name="gnss-ui",
+            developer_name="Mr. ingenious",
+            version=APP_VERSION,
+            comments="A simple GNSS UI for Linux",
+            website="https://github.com/mr-ingenious/gnss-ui",
+            issue_url="https://github.com/mr-ingenious/gnss-ui/issues",
+            support_url="https://github.com/mr-ingenious/gnss-ui",
+            copyright="© 2024 Mr. Ingenious",
+            license_type=Gtk.License.GPL_3_0_ONLY,
+            developers=["Mr. Ingenious <mr.ingenious@gmail.com>"],
+            artists=[""],
+            translator_credits=(""),
+        )
 
-        dialog.set_application_name("GNSS UI")
-        dialog.set_version(APP_VERSION)
-        dialog.set_developer_name("mr-ingenious")
-        dialog.set_license_type(Gtk.License(Gtk.License.GPL_3_0))
-        dialog.set_comments("A simple GNSS UI for Linux")
-        # dialog.set_website("https://github.com/Tailko2k/GTK4PythonTutorial")
-        # dialog.set_issue_url("https://github.com/Tailko2k/GTK4PythonTutorial/issues")
-        dialog.add_credit_section("Contributors", ["Name1 url"])
-        dialog.set_translator_credits("Name1 url")
-        dialog.set_copyright("© 2024 mr-ingenious")
-        dialog.set_developers(["Developer"])
-        dialog.set_application_icon(
-            "com.github.mr-ingenious.gnss-ui"
-        )  # icon must be uploaded in ~/.local/share/icons or /usr/share/icons
-
-        dialog.set_visible(True)
+        dialog.present()
 
     def show_settings_dialog(self, action, param):
         self.logger.info("showing settings dialog")

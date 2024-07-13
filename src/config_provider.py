@@ -104,7 +104,7 @@ class ConfigProvider:
             "last_update": date_time,
             "config": {
                 "general": {
-                    "panel_refresh_cycle_sec": 10,
+                    "panel_refresh_cycle_sec": 2,
                     "resolution": {"height": 800, "width": 1200},
                 },
                 "ttyc": {"ttyname": "/dev/ttyUSB1", "baudrate": 9600},
