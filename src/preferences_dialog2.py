@@ -19,11 +19,15 @@ xml = """\
                     <object class="GtkBox" id="content_area">
                         <property name="orientation">vertical</property>
                         <child>
-                            <object class="GtkBox" id="preferences_area">
+                            <object class="GtkBox" id="preferences_container">
                                 <property name="orientation">vertical</property>
                                 <child>
                                     <object class="GtkLabel" id="title">
                                         <property name="label">Preferences</property>
+                                    </object>
+                                </child>
+                                <child>
+                                    <object class="GtkScrolledWindow" id="preferences_area">
                                     </object>
                                 </child>
                             </object>
@@ -59,6 +63,7 @@ class PreferencesDialog(Gtk.Window):
 
     ok_button = Gtk.Template.Child()
     cancel_button = Gtk.Template.Child()
+    preferences_container = Gtk.Template.Child()
     preferences_area = Gtk.Template.Child()
     title = Gtk.Template.Child()
     buttons_area = Gtk.Template.Child()
@@ -66,10 +71,23 @@ class PreferencesDialog(Gtk.Window):
     def __init__(self, config_provider):
         super().__init__()
         self.config = config_provider
-        
+
+        self.set_default_size(
+            800,
+            600,
+        )
+
         self.logger = logger.get_logger("preferences")
 
         self.title.set_css_classes(["panel_title"])
+
+        self.preferences_container.set_vexpand(True)
+        self.preferences_container.set_hexpand(True)
+
+        self.preferences_area.set_css_classes(["preferences_area"])
+        self.preferences_area.set_vexpand(True)
+        self.preferences_area.set_hexpand(True)
+
         self.buttons_area.set_css_classes(["preferences_buttons_area"])
         self.ok_button.set_css_classes(["button"])
         self.cancel_button.set_css_classes(["button"])
@@ -78,9 +96,9 @@ class PreferencesDialog(Gtk.Window):
         self.set_modal(True)
         self.set_visible(True)
 
-        self.transform_config()
+        self.__transform_config()
 
-    def transform_config(self):
+    def __transform_config(self):
         self.logger.debug("transform_config ...")
         result = []
         self.get_ppart(self.config.get_all_params(), "", result)
@@ -123,7 +141,7 @@ class PreferencesDialog(Gtk.Window):
 
             self.params_listbox.append(box)
 
-        self.preferences_area.append(self.params_listbox)
+        self.preferences_area.set_child(self.params_listbox)
 
     def on_param_selected(self, row, data):
         self.logger.debug("param selected: " + repr(data.get_child().get_name()))
@@ -149,7 +167,7 @@ class PreferencesDialog(Gtk.Window):
         i = 1
         while child != None:
             self.logger.debug(
-                " ---> "
+                "> "
                 + child.get_child().get_first_child().get_name()
                 + ": "
                 + child.get_child().get_first_child().get_next_sibling().get_text()

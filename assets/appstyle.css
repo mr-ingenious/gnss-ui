@@ -30,14 +30,12 @@
 }
 
 .preferences_dialog {
-    background-color: lightgray;
+    background-color: white;
     color: black;
-    border: 1px solid grey;
-    min-width: 800px;
 }
 
 .preferences_row {
-    background-color: lightgray;
+    background-color: gray;
     margin-top: 2px;
     margin-bottom: 2px;
     margin-left: 5px;
@@ -46,7 +44,7 @@
 
 .preferences_label {
     font-weight: bold;
-    font-size: 15px;
+    font-size: 10px;
     margin-left: 5px;
     min-width: 300px;
 }
@@ -54,10 +52,17 @@
 .preferences_value {
     background-color: rgb(236, 235, 235);
     border: 1px solid gray;
-    font-size: 15px;
+    font-size: 10px;
     margin-right: 5px;
     min-width: 400px;
 
+}
+
+.preferences_area {
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 20px;
+    margin-bottom: 5px;
 }
 
 .preferences_buttons_area {
@@ -369,7 +374,7 @@
     border-radius: 5px;
     padding: 5px;
     margin-left: 10px;
-    margin-top: 10px;   
+    margin-top: 10px;
 }
 
 .plot_info_label {
@@ -395,5 +400,5 @@
     border-radius: 5px;
     padding: 5px;
     margin-right: 15px;
-    margin-top: 15px;   
+    margin-top: 15px;
 }

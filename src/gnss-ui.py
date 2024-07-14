@@ -72,7 +72,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
 )
 
-APP_VERSION = "0.10.7"
+APP_VERSION = "0.10.8"
 
 
 class PanelRefresher(threading.Thread):
@@ -428,10 +428,7 @@ class MainWindow(Gtk.ApplicationWindow):
         dialog.present()
 
     def show_settings_dialog(self, action, param):
-        self.logger.info("showing settings dialog")
-
         dialog = PreferencesDialog(self.config)
-        # dialog.set_visible(True)
 
     def _get_resource_file(self, resource_name):
         for p in sys.path:

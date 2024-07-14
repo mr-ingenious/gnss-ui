@@ -65,9 +65,11 @@ class SatellitesInfoPanel(Panel):
 
         satellite_icon = Gtk.Picture()
         if sat["used"]:
-            satellite_icon.set_filename("gnss-ui/assets/satellite_icon2_used.svg")
+            satellite_icon.set_filename(
+                self._get_resource_file("satellite_icon2_used.svg")
+            )
         else:
-            satellite_icon.set_filename("gnss-ui/assets/satellite_icon2.svg")
+            satellite_icon.set_filename(self._get_resource_file("satellite_icon2.svg"))
 
         satellite_box.set_name(satellite_name)
         satellite_box.append(satellite_icon)
