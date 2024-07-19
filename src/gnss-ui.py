@@ -72,7 +72,7 @@ Gtk.StyleContext.add_provider_for_display(
     Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
 )
 
-APP_VERSION = "0.10.8"
+APP_VERSION = "0.10.9"
 
 
 class PanelRefresher(threading.Thread):

@@ -376,6 +376,8 @@ class PlotWindow(Gtk.Window):
         context.set_font_size(10)
 
         if metadata["max"]["value"] != 0.0:
+            # create bins
+
             bin_val_idx = 0
             bin_mean_val = 0.0
             bin_min_val = 1e100
@@ -406,10 +408,16 @@ class PlotWindow(Gtk.Window):
                     bin_min_val = 1e100
                     bin_max_val = 0.0
 
+            # draw lines
+
+            max_indicator_set = False
+
             x = 0
             last = [x, height - self.y_offset]
             for s in bins:
                 if self.bin_size > 1:
+                    # draw min/max line (in red)
+
                     context.set_source_rgb(0.9, 0.5, 0.5)
                     y_min = (
                         height
@@ -428,6 +436,7 @@ class PlotWindow(Gtk.Window):
 
                     context.set_source_rgb(colors[0], colors[1], colors[2])
 
+                # draw value
                 y = (
                     height
                     - self.y_offset
@@ -436,6 +445,31 @@ class PlotWindow(Gtk.Window):
                 context.move_to(last[0], last[1])
                 context.line_to(x, y + 1)
                 context.stroke()
+
+                if max_indicator_set == False and s["max"] == metadata["max"]["value"]:
+                    max_indicator_set = True
+                    context.set_source_rgb(0.5, 0.7, 0.5)
+
+                    context.move_to(x - 5, 135)
+                    context.line_to(x, 147)
+                    # context.stroke()
+
+                    # context.move_to(x + 5, y - 20)
+                    context.line_to(x + 5, 135)
+                    # context.stroke()
+
+                    # context.move_to(x - 5, y - 20)
+                    context.line_to(x - 5, 135)
+                    context.close_path() 
+                    context.fill()
+                    
+                    context.set_font_size(15)
+                    
+                    context.move_to(x + 10, 145)
+                    context.show_text("max: " + str(s["max"]))
+                    
+
+                    context.set_source_rgb(colors[0], colors[1], colors[2])
 
                 x = x + 1
 
