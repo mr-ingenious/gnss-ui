@@ -16,12 +16,19 @@ Some screenshots:
 
 ![Main window with position and satellites information](./screenshots/gnss-ui1.png)
 
-![Main window with position, satellites information and map](./screenshots/gnss-ui2.png)
+![Main window with satellites information only](./screenshots/gnss-ui2.png)
 
-![Main window with all information](./screenshots/gnss-ui3.png)
+![Position and map view](./screenshots/gnss-ui3.png)
 
-![Main window with all information](./screenshots/gnss-ui4.png)
+![Plot window 1](./screenshots/gnss-ui4.png)
 
+![Plot window 1](./screenshots/gnss-ui5.png)
+
+![Plot window 2](./screenshots/gnss-ui6.png)
+
+![Satellites and Recording](./screenshots/gnss-ui7.png)
+
+![Map view](./screenshots/gnss-ui10.png)
 
 ## Installation
 
